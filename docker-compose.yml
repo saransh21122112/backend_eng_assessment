@@ -1,0 +1,52 @@
+services:
+  neo4j-community:
+    image: neo4j:5.26-community
+    ports:
+      - "7474:7474"
+      - "7687:7687"
+    environment:
+      NEO4J_AUTH: neo4j/benchmarkpass
+      NEO4J_server_memory_heap_max__size: 150m
+      NEO4J_server_memory_pagecache_size: 30m
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    volumes:
+      - neo4j_data:/data
+    restart: unless-stopped
+
+  memgraph:
+    image: memgraph/memgraph:2.22.0
+    ports:
+      - "7688:7687"
+    command: ["--memory-limit=200"]
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    volumes:
+      - memgraph_data:/var/lib/memgraph
+    restart: unless-stopped
+
+  arangodb:
+    image: arangodb:3.12
+    ports:
+      - "8529:8529"
+    environment:
+      ARANGO_ROOT_PASSWORD: benchmarkpass
+    deploy:
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256m
+    volumes:
+      - arangodb_data:/var/lib/arangodb3
+    restart: unless-stopped
+
+volumes:
+  neo4j_data:
+  memgraph_data:
+  arangodb_data:

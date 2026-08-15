@@ -1,0 +1,551 @@
+{
+  "generated_at": "2026-08-15T09:55:59.076211Z",
+  "dataset": {
+    "source": "SNAP soc-Pokec",
+    "node_count": 126297,
+    "relationship_count": 200000,
+    "sample_seed": 42
+  },
+  "results": [
+    {
+      "platform": "cognodb",
+      "managed": true,
+      "advertised_specs": "0.5 vCPU / 256MB RAM / 1.0GB disk (managed)",
+      "load": {
+        "nodes_loaded": 126297,
+        "relationships_loaded": 200000,
+        "wall_clock_sec": 171.4277036670028,
+        "nodes_per_sec": 736.7362293164185,
+        "relationships_per_sec": 1166.672572296125,
+        "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
+      },
+      "traversals": [
+        {
+          "hop_depth": 1,
+          "stats": {
+            "p50_ms": 909.8080624989962,
+            "p95_ms": 2391.3005999991583,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 2,
+          "stats": {
+            "p50_ms": 883.1043120007962,
+            "p95_ms": 2258.5731222505274,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 3,
+          "stats": {
+            "p50_ms": 935.5796039999404,
+            "p95_ms": 2415.182586051742,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "lookups": [
+        {
+          "kind": "point",
+          "indexed_properties": [],
+          "stats": {
+            "p50_ms": 881.3346665010613,
+            "p95_ms": 2070.3983827002958,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "kind": "indexed",
+          "indexed_properties": [
+            "age"
+          ],
+          "stats": {
+            "p50_ms": 1123.5604795001564,
+            "p95_ms": 2693.3253878001774,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "aggregations": [
+        {
+          "description": "count of FRIEND relationships",
+          "stats": {
+            "p50_ms": 859.0788329984207,
+            "p95_ms": 2068.1989687509486,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "mixed_workload": [
+        {
+          "concurrency": 1,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 0.9154300751139615,
+          "duration_sec": 5.461913625000307,
+          "errors": 0
+        },
+        {
+          "concurrency": 10,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 7.073113349445711,
+          "duration_sec": 5.796598749999248,
+          "errors": 0
+        },
+        {
+          "concurrency": 40,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 16.208992146382773,
+          "duration_sec": 6.971439000000828,
+          "errors": 0
+        }
+      ],
+      "footprint": {
+        "stored_data_mb": null,
+        "memory_mb": null,
+        "notes": "not observable"
+      },
+      "caveats": [],
+      "failed": false,
+      "failure_reason": null
+    },
+    {
+      "platform": "aura",
+      "managed": true,
+      "advertised_specs": "0.5 vCPU / 256MB RAM / 1.0GB disk (managed)",
+      "load": {
+        "nodes_loaded": 126297,
+        "relationships_loaded": 200000,
+        "wall_clock_sec": 40.428059041998495,
+        "nodes_per_sec": 3123.9936567025634,
+        "relationships_per_sec": 4947.059164829827,
+        "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
+      },
+      "traversals": [
+        {
+          "hop_depth": 1,
+          "stats": {
+            "p50_ms": 256.4395629997307,
+            "p95_ms": 767.5340389481788,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 2,
+          "stats": {
+            "p50_ms": 257.39968750167463,
+            "p95_ms": 656.9547041513943,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 3,
+          "stats": {
+            "p50_ms": 283.82806300032826,
+            "p95_ms": 737.0108916506069,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "lookups": [
+        {
+          "kind": "point",
+          "indexed_properties": [],
+          "stats": {
+            "p50_ms": 259.6059999996214,
+            "p95_ms": 608.2958711518586,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "kind": "indexed",
+          "indexed_properties": [
+            "age"
+          ],
+          "stats": {
+            "p50_ms": 257.9906459995982,
+            "p95_ms": 628.124827101601,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "aggregations": [
+        {
+          "description": "count of FRIEND relationships",
+          "stats": {
+            "p50_ms": 256.70275049924385,
+            "p95_ms": 638.9762270531719,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "mixed_workload": [
+        {
+          "concurrency": 1,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 2.6774349274529805,
+          "duration_sec": 5.2288852500023495,
+          "errors": 0
+        },
+        {
+          "concurrency": 10,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 32.979743176951324,
+          "duration_sec": 5.185000958997989,
+          "errors": 0
+        },
+        {
+          "concurrency": 40,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 129.65652018353796,
+          "duration_sec": 5.244626333002088,
+          "errors": 0
+        }
+      ],
+      "footprint": {
+        "stored_data_mb": null,
+        "memory_mb": null,
+        "notes": "not observable"
+      },
+      "caveats": [],
+      "failed": false,
+      "failure_reason": null
+    },
+    {
+      "platform": "neo4j-community",
+      "managed": false,
+      "advertised_specs": "0.5 vCPU / 256MB RAM / 1.0GB disk (self-hosted, capped)",
+      "load": {
+        "nodes_loaded": 126297,
+        "relationships_loaded": 200000,
+        "wall_clock_sec": 132.9357600839976,
+        "nodes_per_sec": 950.0603894708031,
+        "relationships_per_sec": 1504.486075632522,
+        "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
+      },
+      "traversals": [
+        {
+          "hop_depth": 1,
+          "stats": {
+            "p50_ms": 2.494624999599182,
+            "p95_ms": 57.31994644902443,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 2,
+          "stats": {
+            "p50_ms": 1.9548955006030155,
+            "p95_ms": 78.0827517488433,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 3,
+          "stats": {
+            "p50_ms": 2.425250000669621,
+            "p95_ms": 113.6560705484953,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "lookups": [
+        {
+          "kind": "point",
+          "indexed_properties": [],
+          "stats": {
+            "p50_ms": 2.546500500102411,
+            "p95_ms": 44.53963960168034,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "kind": "indexed",
+          "indexed_properties": [
+            "age"
+          ],
+          "stats": {
+            "p50_ms": 8.648291499412153,
+            "p95_ms": 80.30826074900686,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "aggregations": [
+        {
+          "description": "count of FRIEND relationships",
+          "stats": {
+            "p50_ms": 1.3073130012344336,
+            "p95_ms": 2.1160082998903813,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "mixed_workload": [
+        {
+          "concurrency": 1,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 189.5437276136963,
+          "duration_sec": 5.001484417000029,
+          "errors": 0
+        },
+        {
+          "concurrency": 10,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 0.2314252250360323,
+          "duration_sec": 17.28420054199887,
+          "errors": 10
+        },
+        {
+          "concurrency": 40,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 0.0,
+          "duration_sec": 17.05264249999891,
+          "errors": 40
+        }
+      ],
+      "footprint": {
+        "stored_data_mb": null,
+        "memory_mb": null,
+        "notes": "not observable"
+      },
+      "caveats": [],
+      "failed": false,
+      "failure_reason": null
+    },
+    {
+      "platform": "memgraph",
+      "managed": false,
+      "advertised_specs": "0.5 vCPU / 256MB RAM / 1.0GB disk (self-hosted, capped)",
+      "load": {
+        "nodes_loaded": 126297,
+        "relationships_loaded": 200000,
+        "wall_clock_sec": 17.620225457999823,
+        "nodes_per_sec": 7167.728943142407,
+        "relationships_per_sec": 11350.59256061887,
+        "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
+      },
+      "traversals": [
+        {
+          "hop_depth": 1,
+          "stats": {
+            "p50_ms": 0.5176250001568405,
+            "p95_ms": 0.5821267999863267,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 2,
+          "stats": {
+            "p50_ms": 0.46883350000825885,
+            "p95_ms": 0.5366931001390185,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 3,
+          "stats": {
+            "p50_ms": 0.47043749987096817,
+            "p95_ms": 0.594972899853019,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "lookups": [
+        {
+          "kind": "point",
+          "indexed_properties": [],
+          "stats": {
+            "p50_ms": 0.4649790002986265,
+            "p95_ms": 0.5250666499250656,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "kind": "indexed",
+          "indexed_properties": [
+            "age"
+          ],
+          "stats": {
+            "p50_ms": 4.1914580001503055,
+            "p95_ms": 41.43645450003532,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "aggregations": [
+        {
+          "description": "count of FRIEND relationships",
+          "stats": {
+            "p50_ms": 13.43500000007225,
+            "p95_ms": 62.919645199826846,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "mixed_workload": [
+        {
+          "concurrency": 1,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 2116.973908296604,
+          "duration_sec": 5.000061624999944,
+          "errors": 0
+        },
+        {
+          "concurrency": 10,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 1651.7944259270141,
+          "duration_sec": 5.593311041000106,
+          "errors": 0
+        },
+        {
+          "concurrency": 40,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 1613.9706410370495,
+          "duration_sec": 5.713858583000274,
+          "errors": 0
+        }
+      ],
+      "footprint": {
+        "stored_data_mb": null,
+        "memory_mb": null,
+        "notes": "not observable"
+      },
+      "caveats": [],
+      "failed": false,
+      "failure_reason": null
+    },
+    {
+      "platform": "arangodb",
+      "managed": false,
+      "advertised_specs": "0.5 vCPU / 256MB RAM / 1.0GB disk (self-hosted, capped)",
+      "load": {
+        "nodes_loaded": 126297,
+        "relationships_loaded": 200000,
+        "wall_clock_sec": 8.78367441699811,
+        "nodes_per_sec": 14378.606720166092,
+        "relationships_per_sec": 22769.514272177632,
+        "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
+      },
+      "traversals": [
+        {
+          "hop_depth": 1,
+          "stats": {
+            "p50_ms": 1.749396000377601,
+            "p95_ms": 2.5370750026922906,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 2,
+          "stats": {
+            "p50_ms": 1.5475205018447014,
+            "p95_ms": 2.619081899501907,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "hop_depth": 3,
+          "stats": {
+            "p50_ms": 1.7602915013412712,
+            "p95_ms": 5.794814899491021,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "lookups": [
+        {
+          "kind": "point",
+          "indexed_properties": [],
+          "stats": {
+            "p50_ms": 0.9596039999451023,
+            "p95_ms": 1.2799472991900984,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        },
+        {
+          "kind": "indexed",
+          "indexed_properties": [
+            "age"
+          ],
+          "stats": {
+            "p50_ms": 9.07729149912484,
+            "p95_ms": 46.369281249099004,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "aggregations": [
+        {
+          "description": "count of FRIEND relationships",
+          "stats": {
+            "p50_ms": 19.539479000741267,
+            "p95_ms": 64.27293720189482,
+            "iterations": 100,
+            "warmup_iterations": 10
+          }
+        }
+      ],
+      "mixed_workload": [
+        {
+          "concurrency": 1,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 1513.6832695898938,
+          "duration_sec": 5.000385584000469,
+          "errors": 0
+        },
+        {
+          "concurrency": 10,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 2842.622185155995,
+          "duration_sec": 5.001719916999718,
+          "errors": 0
+        },
+        {
+          "concurrency": 40,
+          "read_write_ratio": "80/20",
+          "throughput_qps": 2775.104262568882,
+          "duration_sec": 5.007019083001069,
+          "errors": 0
+        }
+      ],
+      "footprint": {
+        "stored_data_mb": 0.0,
+        "memory_mb": null,
+        "notes": "not observable"
+      },
+      "caveats": [],
+      "failed": false,
+      "failure_reason": null
+    }
+  ]
+}
