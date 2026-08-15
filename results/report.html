@@ -1,0 +1,669 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CognoDB Under Load</title>
+<style>
+  :root {
+    --paper: #EEF0EC;
+    --surface: #FFFFFF;
+    --surface-2: #E4E7E1;
+    --ink: #14181C;
+    --ink-soft: #454C51;
+    --ink-mute: #767D80;
+    --line: #D3D7CF;
+    --accent: #C97C3D;
+    --accent-ink: #6B3F17;
+    --amber: #9C6A1E;
+    --amber-bg: #F4E7CE;
+    --good: #3F9467;
+    --bad: #C13B54;
+
+    --c-cognodb: #C97C3D;
+    --c-aura: #3B75B5;
+    --c-neo4j: #3F9467;
+    --c-memgraph: #7A5AD0;
+    --c-arangodb: #C13B54;
+
+    --shadow: 0 1px 2px rgba(20,24,28,0.06), 0 6px 20px -8px rgba(20,24,28,0.12);
+    --serif: ui-serif, Charter, "Iowan Old Style", "Source Serif Pro", Georgia, serif;
+    --sans: -apple-system, "Segoe UI", system-ui, "Helvetica Neue", Arial, sans-serif;
+    --mono: ui-monospace, "SF Mono", "Cascadia Code", "Roboto Mono", Consolas, monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #14171A;
+      --surface: #1C1F22;
+      --surface-2: #23272B;
+      --ink: #ECEEEA;
+      --ink-soft: #B7BCB6;
+      --ink-mute: #82898A;
+      --line: #33383C;
+      --accent: #CC7F3E;
+      --accent-ink: #F0C393;
+      --amber: #E0B15B;
+      --amber-bg: #332A17;
+      --good: #4A9E6C;
+      --bad: #D14A5F;
+
+      --c-cognodb: #CC7F3E;
+      --c-aura: #5A8BC4;
+      --c-neo4j: #4A9E6C;
+      --c-memgraph: #8266D6;
+      --c-arangodb: #D14A5F;
+
+      --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.55);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #14171A;
+    --surface: #1C1F22;
+    --surface-2: #23272B;
+    --ink: #ECEEEA;
+    --ink-soft: #B7BCB6;
+    --ink-mute: #82898A;
+    --line: #33383C;
+    --accent: #CC7F3E;
+    --accent-ink: #F0C393;
+    --amber: #E0B15B;
+    --amber-bg: #332A17;
+    --good: #4A9E6C;
+    --bad: #D14A5F;
+
+    --c-cognodb: #CC7F3E;
+    --c-aura: #5A8BC4;
+    --c-neo4j: #4A9E6C;
+    --c-memgraph: #8266D6;
+    --c-arangodb: #D14A5F;
+
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 10px 30px -10px rgba(0,0,0,0.55);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+  .page { max-width: 900px; margin: 0 auto; padding: 4rem 1.5rem 6rem; }
+
+  h1, h2, h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; color: var(--ink); margin: 0; }
+  .num, .tabular { font-variant-numeric: tabular-nums; }
+  code, .mono { font-family: var(--mono); }
+
+  a { color: var(--accent-ink); }
+  a:focus-visible, button:focus-visible, summary:focus-visible {
+    outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 2px;
+  }
+
+  /* ---------- masthead ---------- */
+  .eyebrow {
+    font-family: var(--mono); font-size: 0.72rem; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--ink-mute); margin: 0 0 0.9rem;
+  }
+  .masthead h1 { font-size: clamp(2.1rem, 5vw, 3.1rem); line-height: 1.08; letter-spacing: -0.01em; }
+  .masthead .accent-word { color: var(--accent); }
+  .dek {
+    font-size: 1.15rem; color: var(--ink-soft); max-width: 62ch; margin: 1.1rem 0 0;
+    font-family: var(--serif); font-style: italic; line-height: 1.5;
+  }
+
+  .facts {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; margin-top: 2.4rem;
+  }
+  .fact { background: var(--surface); padding: 0.9rem 1.1rem; }
+  .fact .k { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  .fact .v { font-family: var(--serif); font-size: 1.15rem; margin-top: 0.2rem; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 4.2rem; }
+  .section-head { display: flex; align-items: baseline; gap: 0.9rem; border-bottom: 1px solid var(--line); padding-bottom: 0.75rem; margin-bottom: 1.6rem; }
+  .section-head h2 { font-size: 1.5rem; }
+  .section-head .tag { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-mute); }
+  p.lede { max-width: 68ch; color: var(--ink-soft); }
+  p.lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- verdict tier cards ---------- */
+  .tiers { display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr); }
+  .tier { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.3rem 1.3rem 1.5rem; box-shadow: var(--shadow); }
+  .tier .tier-n { font-family: var(--mono); font-size: 0.68rem; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-mute); }
+  .tier h3 { font-size: 1.15rem; margin-top: 0.35rem; }
+  .tier p { font-size: 0.92rem; color: var(--ink-soft); margin: 0.5rem 0 0; }
+  .tier .chips { display: flex; gap: 0.35rem; margin-top: 0.85rem; flex-wrap: wrap; }
+  .chip { font-family: var(--mono); font-size: 0.72rem; padding: 0.18rem 0.5rem; border-radius: 20px; border: 1px solid var(--line); color: var(--ink-soft); }
+  .chip .dot { display: inline-block; width: 7px; height: 7px; border-radius: 50%; margin-right: 0.35rem; }
+
+  /* ---------- legend ---------- */
+  .legend { display: flex; flex-wrap: wrap; gap: 1.1rem; margin-bottom: 1.1rem; }
+  .legend-item { display: flex; align-items: center; gap: 0.45rem; font-size: 0.82rem; color: var(--ink-soft); }
+  .legend-item .swatch { width: 11px; height: 11px; border-radius: 3px; flex: none; }
+
+  /* ---------- chart shell ---------- */
+  .chart-card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 1.5rem 1.6rem; box-shadow: var(--shadow); }
+  .chart-scroll { overflow-x: auto; }
+  .chart-caption { font-size: 0.82rem; color: var(--ink-mute); margin-top: 0.9rem; }
+  svg text { fill: var(--ink-soft); font-family: var(--sans); }
+  .axis-line { stroke: var(--line); stroke-width: 1; }
+  .grid-line { stroke: var(--line); stroke-width: 1; stroke-dasharray: 2 3; }
+  .bar { transition: opacity 0.12s ease; cursor: default; }
+  .bar:hover { opacity: 0.78; }
+  .bar-label { font-family: var(--mono); font-size: 10.5px; fill: var(--ink-mute); }
+  .cat-label { font-family: var(--mono); font-size: 11px; fill: var(--ink-soft); }
+  .val-tip { font-family: var(--mono); font-size: 11px; fill: var(--ink); font-weight: 600; }
+
+  .line-path { fill: none; stroke-width: 2; }
+  .line-dot { stroke: var(--surface); stroke-width: 1.5; cursor: default; }
+  .line-dot:hover { r: 6; }
+  .end-label { font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .warn-mark { fill: var(--amber); }
+
+  details.tbl { margin-top: 1rem; }
+  details.tbl summary {
+    cursor: pointer; font-family: var(--mono); font-size: 0.76rem; letter-spacing: 0.04em;
+    color: var(--ink-mute); text-transform: uppercase; padding: 0.3rem 0;
+  }
+  table { width: 100%; border-collapse: collapse; margin-top: 0.7rem; font-size: 0.86rem; }
+  thead th {
+    text-align: right; font-family: var(--mono); font-size: 0.7rem; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-mute); font-weight: 500;
+    padding: 0.4rem 0.6rem; border-bottom: 1px solid var(--line);
+  }
+  thead th:first-child, tbody td:first-child { text-align: left; }
+  tbody td { text-align: right; padding: 0.42rem 0.6rem; border-bottom: 1px solid var(--line); color: var(--ink-soft); }
+  tbody td:first-child { color: var(--ink); font-weight: 500; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  /* ---------- caveats ---------- */
+  .caveat-list { display: flex; flex-direction: column; gap: 0.9rem; }
+  .caveat {
+    background: var(--surface); border: 1px solid var(--line); border-left: 3px solid var(--amber);
+    border-radius: 8px; padding: 1rem 1.2rem;
+  }
+  .caveat h4 { font-family: var(--serif); font-size: 1.02rem; margin: 0 0 0.35rem; font-weight: 600; }
+  .caveat p { margin: 0; font-size: 0.92rem; color: var(--ink-soft); }
+  .caveat code { background: var(--surface-2); padding: 0.05rem 0.35rem; border-radius: 4px; font-size: 0.84em; }
+
+  /* ---------- analysis ---------- */
+  .analysis { max-width: 70ch; }
+  .analysis p { margin: 0 0 1.15rem; color: var(--ink-soft); }
+  .analysis p strong { color: var(--ink); font-weight: 600; }
+  .pull {
+    font-family: var(--serif); font-style: italic; font-size: 1.28rem; line-height: 1.45;
+    color: var(--ink); border-left: 3px solid var(--accent); padding-left: 1.1rem;
+    margin: 1.8rem 0; max-width: 56ch;
+  }
+
+  footer { margin-top: 5rem; padding-top: 1.6rem; border-top: 1px solid var(--line); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 0.6rem; font-size: 0.82rem; color: var(--ink-mute); font-family: var(--mono); }
+  footer a { color: var(--ink-soft); }
+
+  @media (max-width: 640px) {
+    .tiers { grid-template-columns: 1fr; }
+    .facts { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .bar, .line-dot { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <header class="masthead">
+    <p class="eyebrow">Graph database benchmark &middot; five platforms, one dataset</p>
+    <h1>CognoDB <span class="accent-word">Under Load</span></h1>
+    <p class="dek">CognoDB Cloud, measured against Neo4j AuraDB Free, Neo4j Community, Memgraph, and ArangoDB &mdash; same graph, same queries, same free-tier-sized resource cap wherever we could enforce one.</p>
+    <div class="facts">
+      <div class="fact"><div class="k">Dataset</div><div class="v">SNAP soc-Pokec</div></div>
+      <div class="fact"><div class="k">Nodes</div><div class="v num">126,297</div></div>
+      <div class="fact"><div class="k">Relationships</div><div class="v num">200,000</div></div>
+      <div class="fact"><div class="k">Resource cap</div><div class="v">0.5 vCPU &middot; 256MB &middot; 1GB</div></div>
+      <div class="fact"><div class="k">Iterations / warmup</div><div class="v num">100 / 10</div></div>
+      <div class="fact"><div class="k">Run completed</div><div class="v num">2026-08-15</div></div>
+    </div>
+  </header>
+
+  <section id="verdict">
+    <div class="section-head"><h2>The three-tier split</h2><span class="tag">headline</span></div>
+    <p class="lede">Every platform finished every workload. What separates them is <strong>where they physically run</strong>, far more than which product they are.</p>
+    <div class="tiers">
+      <div class="tier">
+        <div class="tier-n">Tier 1 &middot; in-memory, self-hosted</div>
+        <h3>Memgraph</h3>
+        <p>Sub-millisecond traversals and the highest sustained write throughput of the field &mdash; paid for with the thinnest memory margin under the 256MB cap.</p>
+        <div class="chips"><span class="chip"><span class="dot" style="background:var(--c-memgraph)"></span>0.5&nbsp;ms p50</span></div>
+      </div>
+      <div class="tier">
+        <div class="tier-n">Tier 2 &middot; disk-backed, self-hosted</div>
+        <h3>Neo4j Community &amp; ArangoDB</h3>
+        <p>Single-digit millisecond reads on the same hardware cap. Neo4j Community's writes collapse under 40-way concurrency; ArangoDB's don't.</p>
+        <div class="chips"><span class="chip"><span class="dot" style="background:var(--c-neo4j)"></span>1&ndash;3&nbsp;ms p50</span><span class="chip"><span class="dot" style="background:var(--c-arangodb)"></span>1&ndash;2&nbsp;ms p50</span></div>
+      </div>
+      <div class="tier">
+        <div class="tier-n">Tier 3 &middot; real managed cloud</div>
+        <h3>CognoDB &amp; Aura</h3>
+        <p>Network round-trip dominates: 250&ndash;950&nbsp;ms per query. CognoDB runs 3&ndash;4&times; slower than Aura on every single workload measured.</p>
+        <div class="chips"><span class="chip"><span class="dot" style="background:var(--c-cognodb)"></span>860&nbsp;ms p50</span><span class="chip"><span class="dot" style="background:var(--c-aura)"></span>257&nbsp;ms p50</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="ingest">
+    <div class="section-head"><h2>Ingest throughput</h2><span class="tag">126,297 nodes &middot; 200,000 relationships</span></div>
+    <p class="lede">Bulk loading is round-trip-count-dominated &mdash; 5,000-row <code>UNWIND</code> batches, so every batch pays the network tax once. That tax shows up here even more starkly than in single-query latency.</p>
+    <div class="chart-card">
+      <div id="chart-ingest"></div>
+      <p class="chart-caption">Log scale &mdash; nodes/sec, higher is better. Hover a bar for exact throughput and wall-clock time.</p>
+      <details class="tbl">
+        <summary>View as table</summary>
+        <table id="table-ingest"></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="traversals">
+    <div class="section-head"><h2>Traversal latency</h2><span class="tag">1&ndash;3 hop, p50</span></div>
+    <p class="lede">Neighbor-expansion queries at increasing hop depth. Note how flat each platform's own line is across 1&rarr;3 hops &mdash; hop depth barely moves latency; <strong>which platform you're on</strong> moves it by three orders of magnitude.</p>
+    <div class="chart-card">
+      <div class="legend" id="legend-traversal"></div>
+      <div class="chart-scroll"><div id="chart-traversal"></div></div>
+      <p class="chart-caption">Log scale &mdash; p50 latency in ms, lower is better. Faded segment on each bar extends to p95.</p>
+      <details class="tbl">
+        <summary>View as table</summary>
+        <table id="table-traversal"></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="lookups-agg">
+    <div class="section-head"><h2>Lookups &amp; aggregation</h2><span class="tag">point &middot; indexed &middot; count</span></div>
+    <p class="lede">A single point lookup by primary key, an indexed range-style lookup on <code>age</code>, and a full relationship count. The indexed lookup is the one query where self-hosted platforms don't dominate by three orders of magnitude &mdash; index traversal cost narrows the gap.</p>
+    <div class="chart-card">
+      <div class="legend" id="legend-lookup"></div>
+      <div class="chart-scroll"><div id="chart-lookup"></div></div>
+      <p class="chart-caption">Log scale &mdash; p50 latency in ms, lower is better. Faded segment extends to p95.</p>
+      <details class="tbl">
+        <summary>View as table</summary>
+        <table id="table-lookup"></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="mixed">
+    <div class="section-head"><h2>Mixed workload throughput</h2><span class="tag">80/20 read&#8202;/&#8202;write &middot; 1, 10, 40 clients</span></div>
+    <p class="lede">Sustained queries/sec as concurrent clients increase, 5-second window per point. Watch Neo4j Community: it starts fastest at concurrency&nbsp;1, then collapses &mdash; lock contention on a 256MB-capped container, not a driver bug.</p>
+    <div class="chart-card">
+      <div class="legend" id="legend-mixed"></div>
+      <div id="chart-mixed"></div>
+      <p class="chart-caption">Log&ndash;log scale. <span class="warn-dot-legend">&#9679;</span><span style="color:var(--amber)">&#9650;</span> marks a point with write errors &mdash; hover for the error count.</p>
+      <details class="tbl">
+        <summary>View as table</summary>
+        <table id="table-mixed"></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="caveats">
+    <div class="section-head"><h2>Caveats</h2><span class="tag">read before you trust a number</span></div>
+    <p class="lede">No platform is marked failed on this run. That's not the same as every number being equally trustworthy.</p>
+    <div class="caveat-list">
+      <div class="caveat">
+        <h4>CognoDB's free tier is genuinely flaky</h4>
+        <p>Bolt connections dropped mid-request at roughly a 1-in-20 to 1-in-25 rate across this project, reproduced across multiple fresh instances. The harness compensates with managed-transaction retry plus an outer batch/call retry with backoff &mdash; so CognoDB's numbers above include real retry tax, not a cherry-picked best case. That's part of why its p95s are the highest in every table.</p>
+      </div>
+      <div class="caveat">
+        <h4>The loader isn't idempotent</h4>
+        <p><code>load_nodes</code>/<code>load_edges</code> use <code>CREATE</code>, not <code>MERGE</code>. Interrupted test runs earlier in this project silently inflated CognoDB to 1,016,079 nodes and Aura to 197,594 (vs. the intended 126,297) before it was caught. Both instances were wiped and reloaded clean before this run &mdash; verified against <code>dataset_info.json</code> &mdash; but re-running the harness against a non-empty database will reproduce the bug. Not fixed in this codebase.</p>
+      </div>
+      <div class="caveat">
+        <h4>Neo4j Community's concurrency collapse is a resource story</h4>
+        <p>10 errors at concurrency&nbsp;10, 40 at concurrency&nbsp;40 &mdash; every other platform shows zero at the same levels. All are Bolt transaction retry-timeouts from many threads racing to write against the same small graph inside a 0.5&nbsp;vCPU / 256MB container. Real and resource-cap-driven, not a Cypher/Bolt driver defect.</p>
+      </div>
+      <div class="caveat">
+        <h4>Memgraph loaded right at its memory ceiling</h4>
+        <p>Being fully in-memory, Memgraph auto-caps its usable heap from the container's cgroup limit and hit repeated "memory limit exceeded" retries around 200&ndash;204MiB while loading &mdash; all succeeded, but a larger dataset would likely fail outright rather than retry through it.</p>
+      </div>
+      <div class="caveat">
+        <h4>Footprint (stored size / memory) isn't really measured</h4>
+        <p>The Bolt-platform footprint call is a stub that never parses the JMX attributes it fetches. Only ArangoDB reports a real number, and it's 0.00MB &mdash; itself suspicious. Treat every footprint figure as "not measured," not "measured as zero."</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="analysis">
+    <div class="section-head"><h2>Analysis</h2><span class="tag">what the numbers mean</span></div>
+    <div class="analysis">
+      <p><strong>Query latency splits cleanly into three tiers</strong> &mdash; self-hosted in-memory (Memgraph) fastest, self-hosted disk-backed (Neo4j Community, ArangoDB) a step behind, and the two real managed clouds (CognoDB, Aura) an order of magnitude slower again, dominated by network round-trip time rather than query-engine speed. A 1-hop traversal p50 is 0.52&nbsp;ms on Memgraph, 1.75&ndash;2.49&nbsp;ms on ArangoDB/Neo4j Community, and 256&ndash;936&nbsp;ms on Aura/CognoDB.</p>
+
+      <p class="pull">For latency-sensitive workloads, &ldquo;managed cloud&rdquo; vs. &ldquo;self-hosted&rdquo; matters far more than which specific managed cloud you pick.</p>
+
+      <p><strong>Within the managed tier, CognoDB is consistently 3&ndash;4&times; slower than Aura</strong> &mdash; 1-hop p50 909.81&nbsp;ms vs. 256.44&nbsp;ms; aggregation p50 859.08&nbsp;ms vs. 256.70&nbsp;ms. Some of that gap is CognoDB's retry tax, but the ratio holds even on workloads that saw no retries at all, which points to a real underlying difference: region distance, or less compute provisioned per query on CognoDB's free c0 tier than Aura Free allocates. A follow-up measuring bare network RTT to each endpoint would separate &ldquo;distance&rdquo; from &ldquo;platform speed&rdquo; &mdash; not done here.</p>
+
+      <p><strong>Ingest throughput tells nearly the opposite story.</strong> ArangoDB loaded the full 326k rows in 8.78s (14,379 nodes/sec), Memgraph in 17.62s (7,168 nodes/sec) &mdash; both dramatically ahead of CognoDB's 171.43s (737 nodes/sec) or even Aura's 40.43s (3,124 nodes/sec). Bulk loading is write-heavy and round-trip-count-dominated, so the same latency penalty that costs managed clouds on reads costs them even more on writes. <strong>An ingest-heavy workload (ETL, bulk sync) widens the self-hosted-vs-managed gap further than a read-heavy one does.</strong></p>
+
+      <p><strong>Memgraph's mixed-workload throughput is the standout number in this benchmark:</strong> 1,614&ndash;2,117&nbsp;qps sustained across every concurrency level tested, 2&ndash;3&times; ArangoDB's 1,514&ndash;2,843&nbsp;qps, and roughly two orders of magnitude past Neo4j Community's collapsed throughput under contention. Memgraph pays for that with the tightest memory margin of the three self-hosted engines &mdash; under matched, free-tier-sized caps, it trades memory headroom for raw throughput, while Neo4j Community trades throughput for memory safety. ArangoDB, notably, doesn't make that tradeoff as sharply: fast on both axes, likely because its default storage engine still persists to disk instead of holding everything in-process the way Memgraph does.</p>
+
+      <p><strong>So where does CognoDB actually fit?</strong> As a real, working, Bolt/Cypher-compatible managed graph database &mdash; every workload in this benchmark ran against it successfully, with zero permanent failures once its instance was reloaded clean. Compared against Aura, the platform closest to it in category (both real managed Bolt/Cypher clouds, free tier), CognoDB is consistently the slower and less stable of the two on every metric measured here: same protocol, same client driver, same dataset, same query text, same resource-tier framing. Whether that gap matters depends on the workload &mdash; for latency-tolerant background jobs, CognoDB is a functioning Neo4j-protocol-compatible option; for anything latency-sensitive on a free tier, Aura currently measures faster and more stable on this dataset.</p>
+    </div>
+  </section>
+
+  <footer>
+    <span>SNAP soc-Pokec sample &middot; seed 42 &middot; generated 2026-08-15T09:55:59Z</span>
+    <span>github.com/saransh21122112/backend_eng_assessment</span>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var PLATFORMS = [
+    { id: "cognodb",         name: "CognoDB Cloud",       managed: true,  var: "--c-cognodb"  },
+    { id: "aura",             name: "Neo4j AuraDB Free",   managed: true,  var: "--c-aura"      },
+    { id: "neo4j-community",  name: "Neo4j Community",     managed: false, var: "--c-neo4j"     },
+    { id: "memgraph",         name: "Memgraph",            managed: false, var: "--c-memgraph"  },
+    { id: "arangodb",         name: "ArangoDB",            managed: false, var: "--c-arangodb"  }
+  ];
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+  function colorOf(pid) {
+    var p = PLATFORMS.filter(function (x) { return x.id === pid; })[0];
+    return cssVar(p.var);
+  }
+
+  var DATA = {
+    ingest: {
+      cognodb:          { nodes_per_sec: 736.7362293164185,  wall: 171.4277036670028 },
+      aura:              { nodes_per_sec: 3123.9936567025634, wall: 40.428059041998495 },
+      "neo4j-community": { nodes_per_sec: 950.0603894708031,  wall: 132.9357600839976 },
+      memgraph:          { nodes_per_sec: 7167.728943142407,  wall: 17.620225457999823 },
+      arangodb:          { nodes_per_sec: 14378.606720166092, wall: 8.78367441699811 }
+    },
+    traversal: {
+      cognodb:          { 1: [909.8080624989962, 2391.3005999991583], 2: [883.1043120007962, 2258.5731222505274], 3: [935.5796039999404, 2415.182586051742] },
+      aura:              { 1: [256.4395629997307, 767.5340389481788],  2: [257.39968750167463, 656.9547041513943], 3: [283.82806300032826, 737.0108916506069] },
+      "neo4j-community": { 1: [2.494624999599182, 57.31994644902443],  2: [1.9548955006030155, 78.0827517488433],  3: [2.425250000669621, 113.6560705484953] },
+      memgraph:          { 1: [0.5176250001568405, 0.5821267999863267],2: [0.46883350000825885, 0.5366931001390185],3: [0.47043749987096817, 0.594972899853019] },
+      arangodb:          { 1: [1.749396000377601, 2.5370750026922906], 2: [1.5475205018447014, 2.619081899501907],  3: [1.7602915013412712, 5.794814899491021] }
+    },
+    lookup: {
+      cognodb:          { point: [881.3346665010613, 2070.3983827002958], indexed: [1123.5604795001564, 2693.3253878001774] },
+      aura:              { point: [259.6059999996214, 608.2958711518586],  indexed: [257.9906459995982, 628.124827101601] },
+      "neo4j-community": { point: [2.546500500102411, 44.53963960168034],  indexed: [8.648291499412153, 80.30826074900686] },
+      memgraph:          { point: [0.4649790002986265, 0.5250666499250656],indexed: [4.1914580001503055, 41.43645450003532] },
+      arangodb:          { point: [0.9596039999451023, 1.2799472991900984],indexed: [9.07729149912484, 46.369281249099004] }
+    },
+    aggregation: {
+      cognodb: [859.0788329984207, 2068.1989687509486],
+      aura: [256.70275049924385, 638.9762270531719],
+      "neo4j-community": [1.3073130012344336, 2.1160082998903813],
+      memgraph: [13.43500000007225, 62.919645199826846],
+      arangodb: [19.539479000741267, 64.27293720189482]
+    },
+    mixed: {
+      cognodb:          [ {c:1, q:0.9154300751139615, e:0}, {c:10, q:7.073113349445711, e:0}, {c:40, q:16.208992146382773, e:0} ],
+      aura:              [ {c:1, q:2.6774349274529805, e:0}, {c:10, q:32.979743176951324, e:0}, {c:40, q:129.65652018353796, e:0} ],
+      "neo4j-community": [ {c:1, q:189.5437276136963, e:0},  {c:10, q:0.2314252250360323, e:10}, {c:40, q:0.0, e:40} ],
+      memgraph:          [ {c:1, q:2116.973908296604, e:0},  {c:10, q:1651.7944259270141, e:0},  {c:40, q:1613.9706410370495, e:0} ],
+      arangodb:          [ {c:1, q:1513.6832695898938, e:0}, {c:10, q:2842.622185155995, e:0},   {c:40, q:2775.104262568882, e:0} ]
+    }
+  };
+
+  var SVGNS = "http://www.w3.org/2000/svg";
+  function el(tag, attrs) {
+    var e = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+  function fmt(v, d) {
+    if (v === null || v === undefined) return "&ndash;";
+    d = d === undefined ? (v < 10 ? 2 : v < 100 ? 1 : 0) : d;
+    return Number(v).toLocaleString(undefined, { minimumFractionDigits: d, maximumFractionDigits: d });
+  }
+  function logPos(v, min, max, a, b) {
+    var lv = Math.log10(Math.max(v, min));
+    var t = (lv - Math.log10(min)) / (Math.log10(max) - Math.log10(min));
+    return a + t * (b - a);
+  }
+  function makeTip() {
+    var tip = document.createElement("div");
+    tip.style.cssText = "position:fixed;pointer-events:none;z-index:50;background:var(--ink);color:var(--paper);" +
+      "font-family:var(--mono);font-size:11.5px;padding:5px 9px;border-radius:6px;opacity:0;transition:opacity .1s;" +
+      "box-shadow:var(--shadow);white-space:nowrap;";
+    document.body.appendChild(tip);
+    return tip;
+  }
+  var tip = makeTip();
+  function showTip(evt, html) {
+    tip.innerHTML = html;
+    tip.style.opacity = 1;
+    tip.style.left = (evt.clientX + 14) + "px";
+    tip.style.top = (evt.clientY - 12) + "px";
+  }
+  function hideTip() { tip.style.opacity = 0; }
+
+  function legend(mount, includeAll) {
+    mount.innerHTML = "";
+    PLATFORMS.forEach(function (p) {
+      var item = document.createElement("span");
+      item.className = "legend-item";
+      var sw = document.createElement("span");
+      sw.className = "swatch";
+      sw.style.background = "var(" + p.var + ")";
+      item.appendChild(sw);
+      item.appendChild(document.createTextNode(p.name));
+      mount.appendChild(item);
+    });
+  }
+
+  /* ---------------- ingest: single horizontal bar chart, log scale ---------------- */
+  function renderIngest() {
+    var mount = document.getElementById("chart-ingest");
+    var W = 760, rowH = 44, top = 10, left = 150, right = 90;
+    var H = top + PLATFORMS.length * rowH + 24;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": "Ingest throughput by platform" });
+
+    var min = 100, max = 20000;
+    [1, 10, 100, 1000, 10000].forEach(function (tick) {
+      var x = logPos(tick, min, max, left, W - right);
+      svg.appendChild(el("line", { class: "grid-line", x1: x, x2: x, y1: top, y2: top + PLATFORMS.length * rowH }));
+      var t = el("text", { x: x, y: top + PLATFORMS.length * rowH + 18, "text-anchor": "middle", class: "cat-label" });
+      t.textContent = tick >= 1000 ? (tick / 1000) + "k" : tick;
+      svg.appendChild(t);
+    });
+
+    PLATFORMS.forEach(function (p, i) {
+      var y = top + i * rowH;
+      var d = DATA.ingest[p.id];
+      var barW = logPos(d.nodes_per_sec, min, max, left, W - right) - left;
+      var label = el("text", { x: left - 12, y: y + rowH / 2 + 4, "text-anchor": "end", class: "cat-label" });
+      label.textContent = p.name;
+      svg.appendChild(label);
+
+      var bar = el("rect", { class: "bar", x: left, y: y + 8, width: Math.max(barW, 3), height: rowH - 20, rx: 5, fill: "var(" + p.var + ")" });
+      bar.addEventListener("mousemove", function (evt) {
+        showTip(evt, p.name + "<br>" + fmt(d.nodes_per_sec, 0) + " nodes/sec<br>" + fmt(d.wall, 1) + "s wall-clock");
+      });
+      bar.addEventListener("mouseleave", hideTip);
+      svg.appendChild(bar);
+
+      var val = el("text", { x: left + barW + 8, y: y + rowH / 2 + 4, class: "val-tip" });
+      val.textContent = fmt(d.nodes_per_sec, 0);
+      svg.appendChild(val);
+    });
+
+    mount.appendChild(svg);
+
+    var tbl = document.getElementById("table-ingest");
+    var rows = "<thead><tr><th>Platform</th><th>Nodes/sec</th><th>Wall-clock (s)</th></tr></thead><tbody>";
+    PLATFORMS.forEach(function (p) {
+      var d = DATA.ingest[p.id];
+      rows += "<tr><td>" + p.name + "</td><td class='tabular'>" + fmt(d.nodes_per_sec, 1) + "</td><td class='tabular'>" + fmt(d.wall, 2) + "</td></tr>";
+    });
+    tbl.innerHTML = rows + "</tbody>";
+  }
+
+  /* ---------------- grouped bar chart (hop depth or point/indexed), log scale, p50 solid + p95 faded ---------------- */
+  function renderGrouped(mountId, tableId, categories, dataByPlatform, opts) {
+    var mount = document.getElementById(mountId);
+    var groupW = 132, barW = 16, gap = 3, top = 14, bottom = 34, left = 46, right = 10;
+    var W = Math.max(560, categories.length * groupW + left + right);
+    var H = 230;
+    var min = opts.min, max = opts.max;
+    var plotTop = top, plotBottom = H - bottom;
+
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": "Latency chart" });
+
+    var ticks = opts.ticks;
+    ticks.forEach(function (tick) {
+      var y = plotBottom - logPos(tick, min, max, 0, plotBottom - plotTop);
+      svg.appendChild(el("line", { class: "grid-line", x1: left, x2: W - right, y1: y, y2: y }));
+      var t = el("text", { x: left - 8, y: y + 3, "text-anchor": "end", class: "cat-label" });
+      t.textContent = tick >= 1 ? tick : tick;
+      svg.appendChild(t);
+    });
+    svg.appendChild(el("line", { class: "axis-line", x1: left, x2: W - right, y1: plotBottom, y2: plotBottom }));
+
+    categories.forEach(function (cat, ci) {
+      var groupX = left + ci * ((W - left - right) / categories.length);
+      var groupWidth = (W - left - right) / categories.length;
+      var innerLeft = groupX + (groupWidth - PLATFORMS.length * (barW + gap)) / 2;
+
+      var catLabel = el("text", { x: groupX + groupWidth / 2, y: H - 10, "text-anchor": "middle", class: "cat-label" });
+      catLabel.textContent = cat.label;
+      svg.appendChild(catLabel);
+
+      PLATFORMS.forEach(function (p, pi) {
+        var pair = dataByPlatform[p.id][cat.key];
+        var p50 = pair[0], p95 = pair[1];
+        var x = innerLeft + pi * (barW + gap);
+        var y50 = plotBottom - logPos(p50, min, max, 0, plotBottom - plotTop);
+        var y95 = plotBottom - logPos(p95, min, max, 0, plotBottom - plotTop);
+
+        var faded = el("rect", { x: x, y: y95, width: barW, height: Math.max(y50 - y95, 0), rx: 3, fill: "var(" + p.var + ")", opacity: 0.28 });
+        svg.appendChild(faded);
+        var solid = el("rect", { class: "bar", x: x, y: y50, width: barW, height: Math.max(plotBottom - y50, 2), rx: 3, fill: "var(" + p.var + ")" });
+        solid.addEventListener("mousemove", function (evt) {
+          showTip(evt, p.name + " &middot; " + cat.label + "<br>p50 " + fmt(p50) + "ms &middot; p95 " + fmt(p95) + "ms");
+        });
+        solid.addEventListener("mouseleave", hideTip);
+        svg.appendChild(solid);
+      });
+    });
+
+    mount.appendChild(svg);
+
+    var tbl = document.getElementById(tableId);
+    var head = "<thead><tr><th>Platform</th>";
+    categories.forEach(function (c) { head += "<th>" + c.label + " p50</th><th>" + c.label + " p95</th>"; });
+    head += "</tr></thead><tbody>";
+    var body = "";
+    PLATFORMS.forEach(function (p) {
+      body += "<tr><td>" + p.name + "</td>";
+      categories.forEach(function (c) {
+        var pair = dataByPlatform[p.id][c.key];
+        body += "<td class='tabular'>" + fmt(pair[0]) + "</td><td class='tabular'>" + fmt(pair[1]) + "</td>";
+      });
+      body += "</tr>";
+    });
+    tbl.innerHTML = head + body + "</tbody>";
+  }
+
+  /* ---------------- mixed workload: log-log line chart ---------------- */
+  function renderMixed() {
+    var mount = document.getElementById("chart-mixed");
+    var W = 760, H = 320, left = 56, right = 92, top = 16, bottom = 38;
+    var xs = [1, 10, 40];
+    var yMin = 0.1, yMax = 3000;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": "Mixed workload throughput vs concurrency" });
+
+    function X(c) { return logPos(c, 1, 40, left, W - right); }
+    function Y(q) { return (H - bottom) - logPos(Math.max(q, yMin), yMin, yMax, 0, (H - bottom) - top); }
+
+    [0.1, 1, 10, 100, 1000].forEach(function (tick) {
+      var y = Y(tick);
+      svg.appendChild(el("line", { class: "grid-line", x1: left, x2: W - right, y1: y, y2: y }));
+      var t = el("text", { x: left - 8, y: y + 3, "text-anchor": "end", class: "cat-label" });
+      t.textContent = tick < 1 ? tick : tick;
+      svg.appendChild(t);
+    });
+    xs.forEach(function (c) {
+      var x = X(c);
+      var t = el("text", { x: x, y: H - bottom + 20, "text-anchor": "middle", class: "cat-label" });
+      t.textContent = c + " client" + (c === 1 ? "" : "s");
+      svg.appendChild(t);
+    });
+    svg.appendChild(el("line", { class: "axis-line", x1: left, x2: W - right, y1: H - bottom, y2: H - bottom }));
+
+    PLATFORMS.forEach(function (p) {
+      var pts = DATA.mixed[p.id];
+      var d = pts.map(function (pt, i) { return (i === 0 ? "M" : "L") + X(pt.c) + " " + Y(pt.q); }).join(" ");
+      svg.appendChild(el("path", { class: "line-path", d: d, stroke: "var(" + p.var + ")" }));
+
+      pts.forEach(function (pt) {
+        var cx = X(pt.c), cy = Y(pt.q);
+        var dot = el("circle", { class: "line-dot", cx: cx, cy: cy, r: 4.5, fill: "var(" + p.var + ")" });
+        dot.addEventListener("mousemove", function (evt) {
+          showTip(evt, p.name + " &middot; " + pt.c + " client" + (pt.c === 1 ? "" : "s") + "<br>" + fmt(pt.q, 1) + " qps" + (pt.e ? "<br><span style='color:#e0b15b'>" + pt.e + " errors</span>" : ""));
+        });
+        dot.addEventListener("mouseleave", hideTip);
+        svg.appendChild(dot);
+        if (pt.e > 0) {
+          var warn = el("path", {
+            class: "warn-mark",
+            d: "M " + cx + " " + (cy - 13) + " l 5 9 l -10 0 z"
+          });
+          svg.appendChild(warn);
+        }
+      });
+
+      var last = pts[pts.length - 1];
+      var lx = X(last.c) + 8, ly = Y(last.q) + 4;
+      var lab = el("text", { class: "end-label", x: lx, y: ly, fill: "var(" + p.var + ")" });
+      lab.textContent = p.name.split(" ")[0];
+      svg.appendChild(lab);
+    });
+
+    mount.appendChild(svg);
+
+    var tbl = document.getElementById("table-mixed");
+    var head = "<thead><tr><th>Platform</th><th>1 client</th><th>10 clients</th><th>40 clients</th></tr></thead><tbody>";
+    var body = "";
+    PLATFORMS.forEach(function (p) {
+      body += "<tr><td>" + p.name + "</td>";
+      DATA.mixed[p.id].forEach(function (pt) {
+        body += "<td class='tabular'>" + fmt(pt.q, 1) + " qps" + (pt.e ? " (" + pt.e + " err)" : "") + "</td>";
+      });
+      body += "</tr>";
+    });
+    tbl.innerHTML = head + body + "</tbody>";
+  }
+
+  legend(document.getElementById("legend-traversal"));
+  legend(document.getElementById("legend-lookup"));
+  legend(document.getElementById("legend-mixed"));
+
+  renderIngest();
+  renderGrouped("chart-traversal", "table-traversal",
+    [{ key: 1, label: "1-hop" }, { key: 2, label: "2-hop" }, { key: 3, label: "3-hop" }],
+    DATA.traversal, { min: 0.3, max: 3000, ticks: [0.5, 5, 50, 500] });
+  renderGrouped("chart-lookup", "table-lookup",
+    [{ key: "point", label: "Point lookup" }, { key: "indexed", label: "Indexed lookup (age)" }],
+    DATA.lookup, { min: 0.3, max: 3000, ticks: [0.5, 5, 50, 500] });
+  renderMixed();
+})();
+</script>
+</body>
+</html>

@@ -8,6 +8,11 @@ latency, and mixed read/write throughput at several concurrency levels —
 the metrics required by the assignment brief. The goal is a fair,
 reproducible comparison, not a marketing exercise for any one platform.
 
+**[View the visual analysis report](results/report.html)** — charts, headline
+tiers, and the full caveats/analysis writeup in a single standalone HTML page
+(open it directly, or via GitHub's raw/htmlpreview view since GitHub doesn't
+render HTML inline).
+
 ## Methodology
 
 - **Same resources across platforms.** The three self-hosted platforms
