@@ -43,10 +43,11 @@ class LatencyStats(BaseModel):
     p95_ms: float
     iterations: int
     warmup_iterations: int
+    cold_ms: Optional[float] = None  # latency of the first (pre-warmup) call, None if warmup=0
 
     @classmethod
     def from_samples_ms(
-        cls, samples_ms: list[float], warmup_iterations: int
+        cls, samples_ms: list[float], warmup_iterations: int, cold_ms: Optional[float] = None
     ) -> "LatencyStats":
         import numpy as np
 
@@ -56,6 +57,7 @@ class LatencyStats(BaseModel):
             p95_ms=float(np.percentile(arr, 95)),
             iterations=len(samples_ms),
             warmup_iterations=warmup_iterations,
+            cold_ms=cold_ms,
         )
 
 
@@ -97,6 +99,17 @@ class MixedWorkloadPoint(BaseModel):
     errors: int = 0
 
 
+class VarianceResult(BaseModel):
+    """Run-to-run stability of a workload: the same query timed across several
+    independent warmup+measure passes, rather than one pass with many iterations.
+    """
+    description: str
+    run_p50_ms: list[float]
+    mean_p50_ms: float
+    stdev_p50_ms: float
+    coefficient_of_variation_pct: float
+
+
 class FootprintResult(BaseModel):
     stored_data_mb: Optional[float] = None
     memory_mb: Optional[float] = None
@@ -112,6 +125,7 @@ class PlatformResult(BaseModel):
     lookups: list[LookupResult] = Field(default_factory=list)
     aggregations: list[AggregationResult] = Field(default_factory=list)
     mixed_workload: list[MixedWorkloadPoint] = Field(default_factory=list)
+    variance: list[VarianceResult] = Field(default_factory=list)
     footprint: FootprintResult = Field(default_factory=FootprintResult)
     caveats: list[str] = Field(default_factory=list)
     failed: bool = False

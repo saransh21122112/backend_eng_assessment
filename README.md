@@ -96,8 +96,9 @@ The last step regenerates the tables below from `results/results.json` and
 rewrites this README in place.
 
 ## Results
+<!-- RESULTS_TABLES:START -->
 
-Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42). Generated at 2026-08-15T09:55:59.076211+00:00.
+Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42). Generated at 2026-08-15T10:59:39.305783+00:00.
 
 ## Data Loading
 
@@ -105,7 +106,7 @@ Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42
 |-----------------|------------|-------------|------------|------------------|--------------------------------------------------|
 | cognodb         | True       |       736.7 |     1166.7 |           171.43 | driver batch UNWIND/insert_many, batch_size=5000 |
 | aura            | True       |      3124   |     4947.1 |            40.43 | driver batch UNWIND/insert_many, batch_size=5000 |
-| neo4j-community | False      |       950.1 |     1504.5 |           132.94 | driver batch UNWIND/insert_many, batch_size=5000 |
+| neo4j-community | False      |      3793.3 |     6007   |            33.29 | driver batch UNWIND/insert_many, batch_size=5000 |
 | memgraph        | False      |      7167.7 |    11350.6 |            17.62 | driver batch UNWIND/insert_many, batch_size=5000 |
 | arangodb        | False      |     14378.6 |    22769.5 |             8.78 | driver batch UNWIND/insert_many, batch_size=5000 |
 
@@ -113,31 +114,80 @@ Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42
 
 | Platform        |   1-hop p50 |   1-hop p95 |   2-hop p50 |   2-hop p95 |   3-hop p50 |   3-hop p95 |
 |-----------------|-------------|-------------|-------------|-------------|-------------|-------------|
-| cognodb         |      909.81 |     2391.3  |      883.1  |     2258.57 |      935.58 |     2415.18 |
-| aura            |      256.44 |      767.53 |      257.4  |      656.95 |      283.83 |      737.01 |
-| neo4j-community |        2.49 |       57.32 |        1.95 |       78.08 |        2.43 |      113.66 |
-| memgraph        |        0.52 |        0.58 |        0.47 |        0.54 |        0.47 |        0.59 |
-| arangodb        |        1.75 |        2.54 |        1.55 |        2.62 |        1.76 |        5.79 |
+| cognodb         |      846.5  |     2071.47 |      935.88 |     2188.65 |      915.63 |     2218.27 |
+| aura            |      259.15 |      661.7  |      275.41 |      833.18 |      266.88 |      697.26 |
+| neo4j-community |        2.69 |       56.48 |        2.34 |       52.84 |        2.15 |       61.6  |
+| memgraph        |        0.77 |        1.27 |        0.48 |        0.59 |        0.52 |        0.8  |
+| arangodb        |        1.26 |        1.95 |        2.03 |        4.11 |        2.7  |        4.83 |
 
 ## Lookups
 
 | Platform        |   Point p50 |   Point p95 |   Indexed p50 |   Indexed p95 | Indexed properties   |
 |-----------------|-------------|-------------|---------------|---------------|----------------------|
-| cognodb         |      881.33 |     2070.4  |       1123.56 |       2693.33 | age                  |
-| aura            |      259.61 |      608.3  |        257.99 |        628.12 | age                  |
-| neo4j-community |        2.55 |       44.54 |          8.65 |         80.31 | age                  |
-| memgraph        |        0.46 |        0.53 |          4.19 |         41.44 | age                  |
-| arangodb        |        0.96 |        1.28 |          9.08 |         46.37 | age                  |
+| cognodb         |      935.01 |     2095.72 |       1118.55 |       2883.6  | age                  |
+| aura            |      252.66 |      595.56 |        287.31 |       1049.55 | age                  |
+| neo4j-community |        2.02 |        8.39 |          3.51 |         55.71 | age                  |
+| memgraph        |        0.46 |        0.52 |          4.13 |         42.24 | age                  |
+| arangodb        |        2.28 |        2.8  |          4.61 |          5.54 | age                  |
 
 ## Aggregations
 
 | Platform        | Description                   |    p50 |     p95 |
 |-----------------|-------------------------------|--------|---------|
-| cognodb         | count of FRIEND relationships | 859.08 | 2068.2  |
-| aura            | count of FRIEND relationships | 256.7  |  638.98 |
-| neo4j-community | count of FRIEND relationships |   1.31 |    2.12 |
-| memgraph        | count of FRIEND relationships |  13.44 |   62.92 |
-| arangodb        | count of FRIEND relationships |  19.54 |   64.27 |
+| cognodb         | count of FRIEND relationships | 887.65 | 2043.2  |
+| aura            | count of FRIEND relationships | 276.46 |  693.16 |
+| neo4j-community | count of FRIEND relationships |   1.17 |    1.93 |
+| memgraph        | count of FRIEND relationships |  13.73 |   64.23 |
+| arangodb        | count of FRIEND relationships |  21.24 |   68.95 |
+
+## Warm vs. Cold
+
+Cold = latency of the first call to a freshly-connected client, before any warm-up. Warm p50/p95 come from the timed run after warm-up, same numbers as the tables above — reproduced here so warm and cold sit side by side per the spec's "report cold-start numbers separately" rule.
+
+| Platform        | Workload                      |   Cold (1st call, ms) |   Warm p50 (ms) |   Warm p95 (ms) |
+|-----------------|-------------------------------|-----------------------|-----------------|-----------------|
+| cognodb         | 1-hop traversal               |                903.82 |          846.5  |         2071.47 |
+| cognodb         | 2-hop traversal               |                843.07 |          935.88 |         2188.65 |
+| cognodb         | 3-hop traversal               |                826.4  |          915.63 |         2218.27 |
+| cognodb         | point lookup                  |                943.9  |          935.01 |         2095.72 |
+| cognodb         | indexed lookup                |               1148.26 |         1118.55 |         2883.6  |
+| cognodb         | count of FRIEND relationships |                984.42 |          887.65 |         2043.2  |
+| aura            | 1-hop traversal               |               1006.72 |          259.15 |          661.7  |
+| aura            | 2-hop traversal               |                279.21 |          275.41 |          833.18 |
+| aura            | 3-hop traversal               |                702.58 |          266.88 |          697.26 |
+| aura            | point lookup                  |                254.51 |          252.66 |          595.56 |
+| aura            | indexed lookup                |                270.24 |          287.31 |         1049.55 |
+| aura            | count of FRIEND relationships |                472.79 |          276.46 |          693.16 |
+| neo4j-community | 1-hop traversal               |               1289.69 |            2.69 |           56.48 |
+| neo4j-community | 2-hop traversal               |                493.05 |            2.34 |           52.84 |
+| neo4j-community | 3-hop traversal               |                513.11 |            2.15 |           61.6  |
+| neo4j-community | point lookup                  |                222.81 |            2.02 |            8.39 |
+| neo4j-community | indexed lookup                |                485.01 |            3.51 |           55.71 |
+| neo4j-community | count of FRIEND relationships |                631.85 |            1.17 |            1.93 |
+| memgraph        | 1-hop traversal               |                  2.86 |            0.77 |            1.27 |
+| memgraph        | 2-hop traversal               |                  0.59 |            0.48 |            0.59 |
+| memgraph        | 3-hop traversal               |                  0.47 |            0.52 |            0.8  |
+| memgraph        | point lookup                  |                  0.51 |            0.46 |            0.52 |
+| memgraph        | indexed lookup                |                  8.51 |            4.13 |           42.24 |
+| memgraph        | count of FRIEND relationships |                 15.63 |           13.73 |           64.23 |
+| arangodb        | 1-hop traversal               |                  7.11 |            1.26 |            1.95 |
+| arangodb        | 2-hop traversal               |                  4.14 |            2.03 |            4.11 |
+| arangodb        | 3-hop traversal               |                  3.71 |            2.7  |            4.83 |
+| arangodb        | point lookup                  |                  2.89 |            2.28 |            2.8  |
+| arangodb        | indexed lookup                |                  9    |            4.61 |            5.54 |
+| arangodb        | count of FRIEND relationships |                 56.1  |           21.24 |           68.95 |
+
+## Run-to-Run Variance
+
+The aggregation query, timed across 5 independent warmup+measure passes (rather than one pass with many iterations) per platform, to check whether p50 itself drifts run-to-run — e.g. from shared free-tier neighbors, network variance, or cache state — rather than just reporting a single run's percentile as if it were exact.
+
+| Platform        | Metric                                        | Per-run p50 (ms)                       |   Mean p50 (ms) |   Stdev (ms) |   CV (%) |
+|-----------------|-----------------------------------------------|----------------------------------------|-----------------|--------------|----------|
+| cognodb         | count of FRIEND relationships (repeated runs) | 825.28, 849.21, 950.83, 855.86, 881.86 |          872.61 |        48.14 |      5.5 |
+| aura            | count of FRIEND relationships (repeated runs) | 333.79, 247.47, 263.40, 256.07, 255.49 |          271.25 |        35.42 |     13.1 |
+| neo4j-community | count of FRIEND relationships (repeated runs) | 1.21, 1.46, 1.69, 1.28, 1.48           |            1.42 |         0.19 |     13.2 |
+| memgraph        | count of FRIEND relationships (repeated runs) | 13.60, 13.57, 13.38, 13.87, 13.77      |           13.64 |         0.19 |      1.4 |
+| arangodb        | count of FRIEND relationships (repeated runs) | 21.12, 20.63, 21.82, 20.64, 21.98      |           21.24 |         0.64 |      3   |
 
 ## Mixed Workload
 
@@ -149,9 +199,9 @@ Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42
 | aura            |             1 | 80/20            |                2.7 |        0 |
 | aura            |            10 | 80/20            |               33   |        0 |
 | aura            |            40 | 80/20            |              129.7 |        0 |
-| neo4j-community |             1 | 80/20            |              189.5 |        0 |
-| neo4j-community |            10 | 80/20            |                0.2 |       10 |
-| neo4j-community |            40 | 80/20            |                0   |       40 |
+| neo4j-community |             1 | 80/20            |               19.8 |        2 |
+| neo4j-community |            10 | 80/20            |                0.2 |        2 |
+| neo4j-community |            40 | 80/20            |               30.3 |        0 |
 | memgraph        |             1 | 80/20            |             2117   |        0 |
 | memgraph        |            10 | 80/20            |             1651.8 |        0 |
 | memgraph        |            40 | 80/20            |             1614   |        0 |
@@ -171,76 +221,13 @@ Dataset: SNAP soc-Pokec — 126,297 nodes, 200,000 relationships (sample seed 42
 
 ## Caveats
 
-Every platform in the table above completed every workload on this run — no
-platform is marked `failed`. That doesn't mean every number is equally
-trustworthy; the honest caveats are these:
+- **cognodb**: load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here.
+- **aura**: load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here.
+- **neo4j-community**: The container OOM-restarted mid-run during this benchmark (visible in docker logs backend_eng_assessment-neo4j-community-1 as two separate 'Changed password' boot sequences) — the harness's own retry logic absorbed it and the run still completed successfully, but it is a real resource-cap effect worth flagging, not something the harness caught on its own.
+- **memgraph**: load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here.
+- **arangodb**: load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here.
 
-- **CognoDB Cloud's free tier is genuinely flaky.** Over the course of this
-  project its Bolt connections dropped mid-request at roughly a 1-in-20 to
-  1-in-25 rate — not a one-off, reproduced across multiple runs and multiple
-  fresh instances. The harness compensates with driver-managed transactions
-  (`execute_read`/`execute_write`, which retry automatically within an
-  8-second budget) plus an outer per-batch/per-call retry with backoff
-  (`bench/load.py:_with_retries`, `bench/stats.py:_call_with_retry`). CognoDB's
-  latency numbers above are therefore real end-to-end latencies including
-  occasional retries, not a cherry-picked best case — which is also why
-  CognoDB's p95s are consistently the highest in every table: some of that
-  gap is genuine platform latency, some is retry tax that a more stable
-  free-tier connection wouldn't pay. Aura, the other real managed cloud,
-  shows the same shape (higher latency than self-hosted, no errors) without
-  needing anywhere near as much retry — suggesting network-hop latency to a
-  managed cloud region is the dominant, fair factor, while CognoDB adds
-  connection instability on top of that.
-- **A non-idempotent loader bit us hard during development.** `load_nodes`/
-  `load_edges` use `CREATE`, not `MERGE`. Every retried or re-run load
-  duplicates data rather than erroring or no-op'ing. Repeated interrupted
-  test runs against CognoDB and Aura silently inflated them to 1,016,079 and
-  197,594 nodes respectively (vs. the intended 126,297) before this was
-  caught — both instances were wiped and reloaded clean before the run in
-  this README. The results here are from a verified-clean load (checked
-  node/relationship counts match `dataset_info.json` before each timed run),
-  but the loader itself is still not idempotent — rerunning `bench.run_all`
-  against a non-empty database will reproduce the bug. Worth fixing with
-  `MERGE` or a pre-run emptiness check; not fixed in this codebase.
-- **Neo4j Community shows write-lock contention under concurrency**, not a
-  platform crash: 10 errors at concurrency=10 and 40 at concurrency=40 in the
-  mixed-workload sweep (see table above), while every other platform shows
-  zero errors at the same concurrency levels. All errors are Bolt
-  transaction retry-timeouts on `run_mixed_write`'s node-pair match, i.e.
-  many threads racing to write relationships against the same small
-  126k-node graph inside a container capped at 0.5 vCPU / 256MB RAM. This is
-  a real, resource-cap-driven result — not a Cypher-vs-Bolt driver bug —
-  and is exactly the kind of workload where CognoDB/Aura's larger backing
-  infrastructure (even under an advertised "free tier") shows an advantage
-  over a resource-matched self-hosted container.
-- **Memgraph came close to its self-imposed memory ceiling during load.**
-  Being a fully in-memory engine, Memgraph auto-caps its usable heap based on
-  the container's cgroup memory limit (256MB here) and hit repeated "Memory
-  limit exceeded" transaction retries around ~200-204MiB while loading
-  126,297 nodes + 200,000 relationships — all retries succeeded and the load
-  finished, but this dataset is close to the edge of what fits in a
-  256MB-capped Memgraph instance. A larger dataset would likely fail
-  outright rather than retry through it. This is a genuine, useful finding:
-  Memgraph's per-node memory overhead is the highest of the three
-  self-hosted engines by this measure, even though its query latency is the
-  fastest of all five platforms once data is loaded.
-- **Footprint (stored-data-size / memory-usage) is not implemented for any
-  Bolt-speaking platform** (`Neo4jBoltClient.footprint()` in
-  `bench/platforms.py` is a stub returning `None`/`None` — it calls
-  `dbms.queryJmx('java.lang:type=Memory')` but never parses the returned
-  attribute list into an actual heap-usage number). Only ArangoDB's
-  footprint (via its native `collection.statistics()` call) is real, and it
-  reports 0.00MB, which is itself suspicious and likely means the
-  `documentsSize` figure being read isn't the right field for this
-  ArangoDB version. Treat every footprint number in this README as
-  "not measured", not "measured as zero/none" — this is a real gap in the
-  harness, not a platform result.
-- **Docker Desktop had to be manually restarted mid-project** (it wasn't
-  running when this final run was reproduced) — the self-hosted containers'
-  data volumes persist across restarts (`docker-compose.yml`'s named
-  volumes), so this doesn't affect data integrity, but it does mean the
-  self-hosted numbers above reflect containers that were freshly started
-  seconds before the benchmark ran, not ones that had been warm for hours.
+<!-- RESULTS_TABLES:END -->
 
 ## Analysis
 

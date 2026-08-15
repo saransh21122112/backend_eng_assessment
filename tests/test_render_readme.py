@@ -146,24 +146,46 @@ def test_render_readme_end_to_end(tmp_path):
     results_path.write_text(_fake_results().model_dump_json())
 
     template_path = tmp_path / "README.md"
-    template_path.write_text("# Title\n\n<!-- RESULTS_TABLES -->\n\n## Analysis\n")
+    template_path.write_text("# Title\n\n## Results\n\n<!-- RESULTS_TABLES:START -->\n<!-- RESULTS_TABLES:END -->\n\n## Analysis\n")
 
     output_path = tmp_path / "OUT.md"
     render_readme(str(results_path), str(template_path), str(output_path))
 
     content = output_path.read_text()
-    assert "<!-- RESULTS_TABLES -->" not in content
+    assert "<!-- RESULTS_TABLES:START -->" in content  # marker preserved for the next re-render
     assert "cognodb" in content
+
+
+def test_render_readme_is_idempotent_on_rerun(tmp_path):
+    """Re-running against a README that already has rendered tables should
+    re-splice cleanly, not duplicate or leave stale content — this used to
+    silently no-op once the marker had been consumed on the first render.
+    """
+    results_path = tmp_path / "results.json"
+    results_path.write_text(_fake_results().model_dump_json())
+
+    template_path = tmp_path / "README.md"
+    template_path.write_text("# Title\n\n## Results\n\n<!-- RESULTS_TABLES:START -->\n<!-- RESULTS_TABLES:END -->\n\n## Analysis\n")
+
+    render_readme(str(results_path), str(template_path), str(template_path))
+    first_pass = template_path.read_text()
+    assert first_pass.count("<!-- RESULTS_TABLES:START -->") == 1
+    assert first_pass.count("cognodb") >= 1
+
+    render_readme(str(results_path), str(template_path), str(template_path))
+    second_pass = template_path.read_text()
+    assert second_pass.count("<!-- RESULTS_TABLES:START -->") == 1
+    assert second_pass == first_pass  # same input results.json -> byte-identical re-render
 
 
 def test_render_readme_no_results_yet(tmp_path):
     results_path = tmp_path / "does_not_exist.json"
     template_path = tmp_path / "README.md"
-    template_path.write_text("# Title\n\n<!-- RESULTS_TABLES -->\n")
+    template_path.write_text("# Title\n\n## Results\n\n<!-- RESULTS_TABLES:START -->\n<!-- RESULTS_TABLES:END -->\n")
 
     output_path = tmp_path / "OUT.md"
     render_readme(str(results_path), str(template_path), str(output_path))
 
     content = output_path.read_text()
-    assert "<!-- RESULTS_TABLES -->" not in content
+    assert "No results yet" in content
     assert "# Title" in content

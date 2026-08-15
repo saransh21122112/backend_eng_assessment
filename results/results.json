@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-08-15T09:55:59.076211Z",
+  "generated_at": "2026-08-15T10:59:39.305783Z",
   "dataset": {
     "source": "SNAP soc-Pokec",
     "node_count": 126297,
@@ -23,28 +23,31 @@
         {
           "hop_depth": 1,
           "stats": {
-            "p50_ms": 909.8080624989962,
-            "p95_ms": 2391.3005999991583,
+            "p50_ms": 846.5015619999576,
+            "p95_ms": 2071.4676187497384,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 903.8213339999857
           }
         },
         {
           "hop_depth": 2,
           "stats": {
-            "p50_ms": 883.1043120007962,
-            "p95_ms": 2258.5731222505274,
+            "p50_ms": 935.8798544999445,
+            "p95_ms": 2188.648518100763,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 843.0746249996446
           }
         },
         {
           "hop_depth": 3,
           "stats": {
-            "p50_ms": 935.5796039999404,
-            "p95_ms": 2415.182586051742,
+            "p50_ms": 915.6275419995836,
+            "p95_ms": 2218.2692922995557,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 826.3995409997733
           }
         }
       ],
@@ -53,10 +56,11 @@
           "kind": "point",
           "indexed_properties": [],
           "stats": {
-            "p50_ms": 881.3346665010613,
-            "p95_ms": 2070.3983827002958,
+            "p50_ms": 935.0072295001155,
+            "p95_ms": 2095.724426449806,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 943.9041250006994
           }
         },
         {
@@ -65,10 +69,11 @@
             "age"
           ],
           "stats": {
-            "p50_ms": 1123.5604795001564,
-            "p95_ms": 2693.3253878001774,
+            "p50_ms": 1118.5465829998975,
+            "p95_ms": 2883.598018749944,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 1148.2612500003597
           }
         }
       ],
@@ -76,10 +81,11 @@
         {
           "description": "count of FRIEND relationships",
           "stats": {
-            "p50_ms": 859.0788329984207,
-            "p95_ms": 2068.1989687509486,
+            "p50_ms": 887.6473125001212,
+            "p95_ms": 2043.2013473007373,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 984.4240419997732
           }
         }
       ],
@@ -111,9 +117,26 @@
         "memory_mb": null,
         "notes": "not observable"
       },
-      "caveats": [],
+      "caveats": [
+        "load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here."
+      ],
       "failed": false,
-      "failure_reason": null
+      "failure_reason": null,
+      "variance": [
+        {
+          "description": "count of FRIEND relationships (repeated runs)",
+          "run_p50_ms": [
+            825.2806044997669,
+            849.2115415001535,
+            950.8250210005826,
+            855.8567085001414,
+            881.8584584996643
+          ],
+          "mean_p50_ms": 872.6064668000618,
+          "stdev_p50_ms": 48.14393977176629,
+          "coefficient_of_variation_pct": 5.5172568166169
+        }
+      ]
     },
     {
       "platform": "aura",
@@ -131,28 +154,31 @@
         {
           "hop_depth": 1,
           "stats": {
-            "p50_ms": 256.4395629997307,
-            "p95_ms": 767.5340389481788,
+            "p50_ms": 259.1492710002967,
+            "p95_ms": 661.7032380999716,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 1006.7228749994683
           }
         },
         {
           "hop_depth": 2,
           "stats": {
-            "p50_ms": 257.39968750167463,
-            "p95_ms": 656.9547041513943,
+            "p50_ms": 275.4052709997268,
+            "p95_ms": 833.1841910001003,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 279.21491699999024
           }
         },
         {
           "hop_depth": 3,
           "stats": {
-            "p50_ms": 283.82806300032826,
-            "p95_ms": 737.0108916506069,
+            "p50_ms": 266.883499999949,
+            "p95_ms": 697.259052100071,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 702.5802499993006
           }
         }
       ],
@@ -161,10 +187,11 @@
           "kind": "point",
           "indexed_properties": [],
           "stats": {
-            "p50_ms": 259.6059999996214,
-            "p95_ms": 608.2958711518586,
+            "p50_ms": 252.65904150001006,
+            "p95_ms": 595.5571106995193,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 254.51291700028378
           }
         },
         {
@@ -173,10 +200,11 @@
             "age"
           ],
           "stats": {
-            "p50_ms": 257.9906459995982,
-            "p95_ms": 628.124827101601,
+            "p50_ms": 287.31456249988696,
+            "p95_ms": 1049.5479517499007,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 270.2425409997886
           }
         }
       ],
@@ -184,10 +212,11 @@
         {
           "description": "count of FRIEND relationships",
           "stats": {
-            "p50_ms": 256.70275049924385,
-            "p95_ms": 638.9762270531719,
+            "p50_ms": 276.4594379996197,
+            "p95_ms": 693.1593003499074,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 472.7863329999309
           }
         }
       ],
@@ -219,9 +248,26 @@
         "memory_mb": null,
         "notes": "not observable"
       },
-      "caveats": [],
+      "caveats": [
+        "load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here."
+      ],
       "failed": false,
-      "failure_reason": null
+      "failure_reason": null,
+      "variance": [
+        {
+          "description": "count of FRIEND relationships (repeated runs)",
+          "run_p50_ms": [
+            333.79006250015664,
+            247.46743700006846,
+            263.4038750002219,
+            256.07452099984584,
+            255.49016650029444
+          ],
+          "mean_p50_ms": 271.24521240011745,
+          "stdev_p50_ms": 35.41574084393249,
+          "coefficient_of_variation_pct": 13.056724773335448
+        }
+      ]
     },
     {
       "platform": "neo4j-community",
@@ -230,37 +276,40 @@
       "load": {
         "nodes_loaded": 126297,
         "relationships_loaded": 200000,
-        "wall_clock_sec": 132.9357600839976,
-        "nodes_per_sec": 950.0603894708031,
-        "relationships_per_sec": 1504.486075632522,
+        "wall_clock_sec": 33.294458333999955,
+        "nodes_per_sec": 3793.3339756732676,
+        "relationships_per_sec": 6007.005670242788,
         "load_method": "driver batch UNWIND/insert_many, batch_size=5000"
       },
       "traversals": [
         {
           "hop_depth": 1,
           "stats": {
-            "p50_ms": 2.494624999599182,
-            "p95_ms": 57.31994644902443,
+            "p50_ms": 2.688874999876134,
+            "p95_ms": 56.48442260001046,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 1289.69379199998
           }
         },
         {
           "hop_depth": 2,
           "stats": {
-            "p50_ms": 1.9548955006030155,
-            "p95_ms": 78.0827517488433,
+            "p50_ms": 2.339708500130655,
+            "p95_ms": 52.83633125009146,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 493.0515840001135
           }
         },
         {
           "hop_depth": 3,
           "stats": {
-            "p50_ms": 2.425250000669621,
-            "p95_ms": 113.6560705484953,
+            "p50_ms": 2.152874999865162,
+            "p95_ms": 61.603962800381844,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 513.1080830001338
           }
         }
       ],
@@ -269,10 +318,11 @@
           "kind": "point",
           "indexed_properties": [],
           "stats": {
-            "p50_ms": 2.546500500102411,
-            "p95_ms": 44.53963960168034,
+            "p50_ms": 2.0210415000292414,
+            "p95_ms": 8.394358950294967,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 222.80562500009182
           }
         },
         {
@@ -281,10 +331,11 @@
             "age"
           ],
           "stats": {
-            "p50_ms": 8.648291499412153,
-            "p95_ms": 80.30826074900686,
+            "p50_ms": 3.5098329999527778,
+            "p95_ms": 55.71403569977064,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 485.013374999653
           }
         }
       ],
@@ -292,10 +343,11 @@
         {
           "description": "count of FRIEND relationships",
           "stats": {
-            "p50_ms": 1.3073130012344336,
-            "p95_ms": 2.1160082998903813,
+            "p50_ms": 1.1705829997481487,
+            "p95_ms": 1.9293868500199094,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 631.8481250000332
           }
         }
       ],
@@ -303,23 +355,38 @@
         {
           "concurrency": 1,
           "read_write_ratio": "80/20",
-          "throughput_qps": 189.5437276136963,
-          "duration_sec": 5.001484417000029,
-          "errors": 0
+          "throughput_qps": 19.817568798762412,
+          "duration_sec": 18.367540624999947,
+          "errors": 2
         },
         {
           "concurrency": 10,
           "read_write_ratio": "80/20",
-          "throughput_qps": 0.2314252250360323,
-          "duration_sec": 17.28420054199887,
-          "errors": 10
+          "throughput_qps": 0.20324282157217485,
+          "duration_sec": 39.3617837920001,
+          "errors": 2
         },
         {
           "concurrency": 40,
           "read_write_ratio": "80/20",
-          "throughput_qps": 0.0,
-          "duration_sec": 17.05264249999891,
-          "errors": 40
+          "throughput_qps": 30.309447278813973,
+          "duration_sec": 5.542826249999962,
+          "errors": 0
+        }
+      ],
+      "variance": [
+        {
+          "description": "count of FRIEND relationships (repeated runs)",
+          "run_p50_ms": [
+            1.2134380001498357,
+            1.4569585002845997,
+            1.6938545002176397,
+            1.278562500147018,
+            1.4758750000964937
+          ],
+          "mean_p50_ms": 1.4237377001791174,
+          "stdev_p50_ms": 0.1884720190121997,
+          "coefficient_of_variation_pct": 13.237832993288611
         }
       ],
       "footprint": {
@@ -327,7 +394,9 @@
         "memory_mb": null,
         "notes": "not observable"
       },
-      "caveats": [],
+      "caveats": [
+        "The container OOM-restarted mid-run during this benchmark (visible in docker logs backend_eng_assessment-neo4j-community-1 as two separate 'Changed password' boot sequences) \u2014 the harness's own retry logic absorbed it and the run still completed successfully, but it is a real resource-cap effect worth flagging, not something the harness caught on its own."
+      ],
       "failed": false,
       "failure_reason": null
     },
@@ -347,28 +416,31 @@
         {
           "hop_depth": 1,
           "stats": {
-            "p50_ms": 0.5176250001568405,
-            "p95_ms": 0.5821267999863267,
+            "p50_ms": 0.7743744999970659,
+            "p95_ms": 1.2735288501062314,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 2.8603749997273553
           }
         },
         {
           "hop_depth": 2,
           "stats": {
-            "p50_ms": 0.46883350000825885,
-            "p95_ms": 0.5366931001390185,
+            "p50_ms": 0.4786455001521972,
+            "p95_ms": 0.5877017999409873,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 0.5854589999216842
           }
         },
         {
           "hop_depth": 3,
           "stats": {
-            "p50_ms": 0.47043749987096817,
-            "p95_ms": 0.594972899853019,
+            "p50_ms": 0.5227919996286801,
+            "p95_ms": 0.7968639500177227,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 0.4726250008388888
           }
         }
       ],
@@ -377,10 +449,11 @@
           "kind": "point",
           "indexed_properties": [],
           "stats": {
-            "p50_ms": 0.4649790002986265,
-            "p95_ms": 0.5250666499250656,
+            "p50_ms": 0.4644579998966947,
+            "p95_ms": 0.5217347992584109,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 0.5058340002506156
           }
         },
         {
@@ -389,10 +462,11 @@
             "age"
           ],
           "stats": {
-            "p50_ms": 4.1914580001503055,
-            "p95_ms": 41.43645450003532,
+            "p50_ms": 4.127312000036909,
+            "p95_ms": 42.24485800000366,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 8.514459000252828
           }
         }
       ],
@@ -400,10 +474,11 @@
         {
           "description": "count of FRIEND relationships",
           "stats": {
-            "p50_ms": 13.43500000007225,
-            "p95_ms": 62.919645199826846,
+            "p50_ms": 13.728645999890432,
+            "p95_ms": 64.22776664999219,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 15.62595900031738
           }
         }
       ],
@@ -435,9 +510,26 @@
         "memory_mb": null,
         "notes": "not observable"
       },
-      "caveats": [],
+      "caveats": [
+        "load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here."
+      ],
       "failed": false,
-      "failure_reason": null
+      "failure_reason": null,
+      "variance": [
+        {
+          "description": "count of FRIEND relationships (repeated runs)",
+          "run_p50_ms": [
+            13.604854000277555,
+            13.568395999755012,
+            13.384270999722503,
+            13.869062499907159,
+            13.767020999694068
+          ],
+          "mean_p50_ms": 13.63872089987126,
+          "stdev_p50_ms": 0.1873202328045501,
+          "coefficient_of_variation_pct": 1.3734442854264894
+        }
+      ]
     },
     {
       "platform": "arangodb",
@@ -455,28 +547,31 @@
         {
           "hop_depth": 1,
           "stats": {
-            "p50_ms": 1.749396000377601,
-            "p95_ms": 2.5370750026922906,
+            "p50_ms": 1.259082999695238,
+            "p95_ms": 1.9477499999993595,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 7.112041999789653
           }
         },
         {
           "hop_depth": 2,
           "stats": {
-            "p50_ms": 1.5475205018447014,
-            "p95_ms": 2.619081899501907,
+            "p50_ms": 2.025999999659689,
+            "p95_ms": 4.105670850412934,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 4.139958999985538
           }
         },
         {
           "hop_depth": 3,
           "stats": {
-            "p50_ms": 1.7602915013412712,
-            "p95_ms": 5.794814899491021,
+            "p50_ms": 2.7023960001315572,
+            "p95_ms": 4.826400599904446,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 3.7094589997650473
           }
         }
       ],
@@ -485,10 +580,11 @@
           "kind": "point",
           "indexed_properties": [],
           "stats": {
-            "p50_ms": 0.9596039999451023,
-            "p95_ms": 1.2799472991900984,
+            "p50_ms": 2.2809795004832267,
+            "p95_ms": 2.7950910001891316,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 2.8900409997731913
           }
         },
         {
@@ -497,10 +593,11 @@
             "age"
           ],
           "stats": {
-            "p50_ms": 9.07729149912484,
-            "p95_ms": 46.369281249099004,
+            "p50_ms": 4.614249500264123,
+            "p95_ms": 5.535935399848296,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 9.003459000268776
           }
         }
       ],
@@ -508,10 +605,11 @@
         {
           "description": "count of FRIEND relationships",
           "stats": {
-            "p50_ms": 19.539479000741267,
-            "p95_ms": 64.27293720189482,
+            "p50_ms": 21.237791499970626,
+            "p95_ms": 68.94766664950112,
             "iterations": 100,
-            "warmup_iterations": 10
+            "warmup_iterations": 10,
+            "cold_ms": 56.09699999968143
           }
         }
       ],
@@ -543,9 +641,26 @@
         "memory_mb": null,
         "notes": "not observable"
       },
-      "caveats": [],
+      "caveats": [
+        "load stage skipped for this run (--skip-load): reusing data already loaded by a prior clean run, to avoid the non-idempotent CREATE loader duplicating data on re-run. Ingest throughput figures, if present, are carried over from that prior run rather than re-measured here."
+      ],
       "failed": false,
-      "failure_reason": null
+      "failure_reason": null,
+      "variance": [
+        {
+          "description": "count of FRIEND relationships (repeated runs)",
+          "run_p50_ms": [
+            21.124229499946523,
+            20.63220799982446,
+            21.82479199973386,
+            20.64308399985748,
+            21.976479000386462
+          ],
+          "mean_p50_ms": 21.240158499949757,
+          "stdev_p50_ms": 0.63708427832155,
+          "coefficient_of_variation_pct": 2.9994327882395844
+        }
+      ]
     }
   ]
 }

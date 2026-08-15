@@ -8,13 +8,15 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 from typing import Optional
 
 from tabulate import tabulate
 
 from bench.models import BenchmarkResults, LookupKind
 
-MARKER = "<!-- RESULTS_TABLES -->"
+MARKER_START = "<!-- RESULTS_TABLES:START -->"
+MARKER_END = "<!-- RESULTS_TABLES:END -->"
 
 
 def load_results(path: str) -> BenchmarkResults:
@@ -133,6 +135,50 @@ def render_footprint_table(results: BenchmarkResults) -> str:
     return tabulate(rows, headers=headers, tablefmt="github")
 
 
+def render_cold_vs_warm_table(results: BenchmarkResults) -> str:
+    headers = ["Platform", "Workload", "Cold (1st call, ms)", "Warm p50 (ms)", "Warm p95 (ms)"]
+    rows = []
+    for r in results.results:
+        if r.failed:
+            rows.append([r.platform.value, "", f"failed: {r.failure_reason}", "", ""])
+            continue
+        for t in r.traversals:
+            rows.append([
+                r.platform.value, f"{t.hop_depth}-hop traversal",
+                _na(t.stats.cold_ms), f"{t.stats.p50_ms:.2f}", f"{t.stats.p95_ms:.2f}",
+            ])
+        for lk in r.lookups:
+            rows.append([
+                r.platform.value, f"{lk.kind.value} lookup",
+                _na(lk.stats.cold_ms), f"{lk.stats.p50_ms:.2f}", f"{lk.stats.p95_ms:.2f}",
+            ])
+        for a in r.aggregations:
+            rows.append([
+                r.platform.value, a.description,
+                _na(a.stats.cold_ms), f"{a.stats.p50_ms:.2f}", f"{a.stats.p95_ms:.2f}",
+            ])
+    return tabulate(rows, headers=headers, tablefmt="github")
+
+
+def render_variance_table(results: BenchmarkResults) -> str:
+    headers = ["Platform", "Metric", "Per-run p50 (ms)", "Mean p50 (ms)", "Stdev (ms)", "CV (%)"]
+    rows = []
+    for r in results.results:
+        if r.failed:
+            rows.append([r.platform.value, "", f"failed: {r.failure_reason}", "", "", ""])
+            continue
+        if not r.variance:
+            rows.append([r.platform.value, "not observable", "not observable", "not observable", "not observable", "not observable"])
+            continue
+        for v in r.variance:
+            per_run = ", ".join(f"{p:.2f}" for p in v.run_p50_ms)
+            rows.append([
+                r.platform.value, v.description, per_run,
+                f"{v.mean_p50_ms:.2f}", f"{v.stdev_p50_ms:.2f}", f"{v.coefficient_of_variation_pct:.1f}",
+            ])
+    return tabulate(rows, headers=headers, tablefmt="github")
+
+
 def render_caveats_section(results: BenchmarkResults) -> str:
     lines = []
     for r in results.results:
@@ -149,13 +195,35 @@ def _dataset_line(results: BenchmarkResults) -> str:
     )
 
 
+def _splice(template: str, body: str) -> str:
+    """Replace the region between MARKER_START/MARKER_END with `body`, keeping
+    the markers so the next render is a clean re-splice rather than a no-op.
+
+    Falls back to replacing everything between the `## Results` heading and
+    the next top-level heading if the markers aren't present yet (e.g. the
+    first render against an older README that predates this marker scheme) —
+    and inserts the markers so every render after that is idempotent.
+    """
+    wrapped = f"{MARKER_START}\n\n{body}\n\n{MARKER_END}"
+    if MARKER_START in template and MARKER_END in template:
+        pattern = re.escape(MARKER_START) + r".*?" + re.escape(MARKER_END)
+        return re.sub(pattern, wrapped, template, flags=re.S)
+
+    match = re.search(r"(^## Results\n).*?(?=^## Analysis\b)", template, flags=re.S | re.M)
+    if match:
+        return template[: match.end(1)] + wrapped + "\n\n" + template[match.end():]
+
+    # No prior results section at all — nothing sensible to splice into.
+    return template + "\n\n" + wrapped + "\n"
+
+
 def render_readme(results_path: str, template_path: str, output_path: str) -> None:
     with open(template_path, "r") as f:
         template = f.read()
 
     if not os.path.exists(results_path):
         body = f"_No results yet — run `python bench/run_all.py` then `python {os.path.relpath(__file__)}` to populate this section._"
-        output = template.replace(MARKER, body)
+        output = _splice(template, body)
         with open(output_path, "w") as f:
             f.write(output)
         return
@@ -168,12 +236,25 @@ def render_readme(results_path: str, template_path: str, output_path: str) -> No
         "## Traversals\n\n" + render_traversal_table(results),
         "## Lookups\n\n" + render_lookup_table(results),
         "## Aggregations\n\n" + render_aggregation_table(results),
+        "## Warm vs. Cold\n\n"
+        "Cold = latency of the first call to a freshly-connected client, before "
+        "any warm-up. Warm p50/p95 come from the timed run after warm-up, same "
+        "numbers as the tables above — reproduced here so warm and cold sit "
+        "side by side per the spec's \"report cold-start numbers separately\" rule.\n\n"
+        + render_cold_vs_warm_table(results),
+        "## Run-to-Run Variance\n\n"
+        "The aggregation query, timed across 5 independent warmup+measure passes "
+        "(rather than one pass with many iterations) per platform, to check "
+        "whether p50 itself drifts run-to-run — e.g. from shared free-tier "
+        "neighbors, network variance, or cache state — rather than just "
+        "reporting a single run's percentile as if it were exact.\n\n"
+        + render_variance_table(results),
         "## Mixed Workload\n\n" + render_mixed_workload_table(results),
         "## Footprint\n\n" + render_footprint_table(results),
         "## Caveats\n\n" + render_caveats_section(results),
     ]
     body = "\n\n".join(sections)
-    output = template.replace(MARKER, body)
+    output = _splice(template, body)
     with open(output_path, "w") as f:
         f.write(output)
 
