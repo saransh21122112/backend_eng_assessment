@@ -13,8 +13,54 @@ tiers, and the full caveats/analysis writeup in a single standalone HTML page
 (open it directly, or via GitHub's raw/htmlpreview view since GitHub doesn't
 render HTML inline).
 
+**[Read the write-up](ARTICLE.md)** — a plain-English version of this
+project's findings, written for a broad technical audience rather than as a
+results dump.
+
+## Why these five databases
+
+- **CognoDB Cloud** — the platform under evaluation.
+- **Neo4j AuraDB Free** — the closest apples-to-apples comparison available:
+  a *real* managed cloud, on a free tier, speaking the exact same Bolt/Cypher
+  protocol and using the exact same client driver as CognoDB. Every
+  difference between these two isolates "which managed cloud" from "managed
+  vs. self-hosted."
+- **Neo4j Community** (self-hosted, Docker, resource-capped) — the reference
+  implementation of the protocol both CognoDB and Aura speak. Running it
+  ourselves, capped to the same resources, isolates "network + multi-tenant
+  cloud overhead" from "the query engine itself."
+- **Memgraph** (self-hosted, Docker, resource-capped) — also Bolt/Cypher
+  compatible, but architecturally different (in-memory rather than
+  disk-backed), giving a second, contrasting self-hosted reference point
+  rather than a second copy of Neo4j's engine.
+- **ArangoDB** (self-hosted, Docker, resource-capped) — deliberately *not*
+  Bolt/Cypher. It's multi-model with its own query language (AQL), which
+  forces the harness to have a real per-platform query-translation layer
+  (`bench/platforms.py`'s `GraphClient` abstraction) instead of assuming
+  Cypher everywhere — a more honest test of whether the harness generalizes,
+  and a useful data point on whether "not being Neo4j-protocol-compatible"
+  costs a platform anything in practice (it doesn't, on this benchmark).
+
+Two real managed clouds, two Bolt/Cypher self-hosted references, and one
+architecturally different self-hosted outsider — chosen to separate
+"managed vs. self-hosted" from "which specific product" as cleanly as five
+databases can.
+
 ## Methodology
 
+- **Same client, same machine, every run.** All five platforms were
+  benchmarked from the same physical machine, sequentially, in the same
+  session, using `bench/run_all.py`. Self-hosted platforms were verified
+  local (`localhost`, no network hop); CognoDB and Aura were reached over
+  the public internet from that same machine. We did **not** verify or pin
+  the specific cloud region each managed instance was provisioned in — both
+  were created via each platform's default signup flow, which auto-selects
+  a region rather than prompting for one. This is an honest gap: some of the
+  latency difference between CognoDB and Aura (see Analysis) could be
+  partly attributable to region distance rather than platform speed, and we
+  did not measure raw network RTT to separate the two. A stronger version
+  of this benchmark would pin both to the same region explicitly and
+  measure bare TCP/TLS handshake time as a baseline.
 - **Same resources across platforms.** The three self-hosted platforms
   (Neo4j Community, Memgraph, ArangoDB) run via `docker-compose.yml`, each
   capped at 0.5 vCPU / 256MB RAM / 1GB disk. CognoDB Cloud and Neo4j AuraDB
