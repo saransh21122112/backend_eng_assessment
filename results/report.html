@@ -298,6 +298,33 @@
     </div>
   </section>
 
+  <section id="warm-cold">
+    <div class="section-head"><h2>Warm vs. cold</h2><span class="tag">aggregation query &middot; first call vs. warmed-up</span></div>
+    <p class="lede">Cold = latency of the very first call on a freshly-connected client, before any warm-up. For the two managed clouds, cold is close to warm &mdash; there's no local cache to lose, so a "cold" query pays roughly the same network tax a warm one does. For the self-hosted platforms the gap is real: Neo4j Community's cold call is <strong>540&times;</strong> its own warm p50.</p>
+    <div class="chart-card">
+      <div class="legend" id="legend-coldwarm"></div>
+      <div id="chart-coldwarm"></div>
+      <p class="chart-caption">Log scale &mdash; ms, lower is better. Solid = warm p50, hollow-edge marker = cold (first call).</p>
+      <details class="tbl">
+        <summary>View as table &mdash; all six workloads, not just aggregation</summary>
+        <table id="table-coldwarm"></table>
+      </details>
+    </div>
+  </section>
+
+  <section id="variance">
+    <div class="section-head"><h2>Run-to-run variance</h2><span class="tag">aggregation query &middot; 5 independent passes</span></div>
+    <p class="lede">Same query, timed across 5 separate warmup+measure passes per platform rather than one pass with many iterations &mdash; checking whether the p50 itself drifts, not just whether individual calls are noisy. Counterintuitively, <strong>CognoDB is more consistent run-to-run than Aura or Neo4j Community</strong> on this metric (CV 5.5% vs. 13.1% / 13.2%) &mdash; its retries are frequent, but its settled number holds steady once you look across runs rather than within one.</p>
+    <div class="chart-card">
+      <div id="chart-variance"></div>
+      <p class="chart-caption">Coefficient of variation (stdev &divide; mean, as %) across 5 independent runs &mdash; lower means more consistent. Hover a bar for the 5 raw per-run p50s.</p>
+      <details class="tbl">
+        <summary>View as table</summary>
+        <table id="table-variance"></table>
+      </details>
+    </div>
+  </section>
+
   <section id="mixed">
     <div class="section-head"><h2>Mixed workload throughput</h2><span class="tag">80/20 read&#8202;/&#8202;write &middot; 1, 10, 40 clients</span></div>
     <p class="lede">Sustained queries/sec as concurrent clients increase, 5-second window per point. Watch Neo4j Community: it starts fastest at concurrency&nbsp;1, then collapses &mdash; lock contention on a 256MB-capped container, not a driver bug.</p>
@@ -418,6 +445,40 @@
       "neo4j-community": [ {c:1, q:189.5437276136963, e:0},  {c:10, q:0.2314252250360323, e:10}, {c:40, q:0.0, e:40} ],
       memgraph:          [ {c:1, q:2116.973908296604, e:0},  {c:10, q:1651.7944259270141, e:0},  {c:40, q:1613.9706410370495, e:0} ],
       arangodb:          [ {c:1, q:1513.6832695898938, e:0}, {c:10, q:2842.622185155995, e:0},   {c:40, q:2775.104262568882, e:0} ]
+    },
+    coldWarm: {
+      cognodb:          { agg: { cold: 984.42, warm50: 887.65, warm95: 2043.20 }, all: [
+        ["1-hop traversal", 903.82, 846.50, 2071.47], ["2-hop traversal", 843.07, 935.88, 2188.65],
+        ["3-hop traversal", 826.40, 915.63, 2218.27], ["point lookup", 943.90, 935.01, 2095.72],
+        ["indexed lookup", 1148.26, 1118.55, 2883.60], ["aggregation", 984.42, 887.65, 2043.20]
+      ]},
+      aura: { agg: { cold: 472.79, warm50: 276.46, warm95: 693.16 }, all: [
+        ["1-hop traversal", 1006.72, 259.15, 661.70], ["2-hop traversal", 279.21, 275.41, 833.18],
+        ["3-hop traversal", 702.58, 266.88, 697.26], ["point lookup", 254.51, 252.66, 595.56],
+        ["indexed lookup", 270.24, 287.31, 1049.55], ["aggregation", 472.79, 276.46, 693.16]
+      ]},
+      "neo4j-community": { agg: { cold: 631.85, warm50: 1.17, warm95: 1.93 }, all: [
+        ["1-hop traversal", 1289.69, 2.69, 56.48], ["2-hop traversal", 493.05, 2.34, 52.84],
+        ["3-hop traversal", 513.11, 2.15, 61.60], ["point lookup", 222.81, 2.02, 8.39],
+        ["indexed lookup", 485.01, 3.51, 55.71], ["aggregation", 631.85, 1.17, 1.93]
+      ]},
+      memgraph: { agg: { cold: 15.63, warm50: 13.73, warm95: 64.23 }, all: [
+        ["1-hop traversal", 2.86, 0.77, 1.27], ["2-hop traversal", 0.59, 0.48, 0.59],
+        ["3-hop traversal", 0.47, 0.52, 0.80], ["point lookup", 0.51, 0.46, 0.52],
+        ["indexed lookup", 8.51, 4.13, 42.24], ["aggregation", 15.63, 13.73, 64.23]
+      ]},
+      arangodb: { agg: { cold: 56.10, warm50: 21.24, warm95: 68.95 }, all: [
+        ["1-hop traversal", 7.11, 1.26, 1.95], ["2-hop traversal", 4.14, 2.03, 4.11],
+        ["3-hop traversal", 3.71, 2.70, 4.83], ["point lookup", 2.89, 2.28, 2.80],
+        ["indexed lookup", 9.00, 4.61, 5.54], ["aggregation", 56.10, 21.24, 68.95]
+      ]}
+    },
+    variance: {
+      cognodb:          { runs: [825.28, 849.21, 950.83, 855.86, 881.86], mean: 872.61, stdev: 48.14, cv: 5.5 },
+      aura:              { runs: [333.79, 247.47, 263.40, 256.07, 255.49], mean: 271.25, stdev: 35.42, cv: 13.1 },
+      "neo4j-community": { runs: [1.21, 1.46, 1.69, 1.28, 1.48],           mean: 1.42,   stdev: 0.19,  cv: 13.2 },
+      memgraph:          { runs: [13.60, 13.57, 13.38, 13.87, 13.77],      mean: 13.64,  stdev: 0.19,  cv: 1.4 },
+      arangodb:          { runs: [21.12, 20.63, 21.82, 20.64, 21.98],      mean: 21.24,  stdev: 0.64,  cv: 3.0 }
     }
   };
 
@@ -581,6 +642,113 @@
     tbl.innerHTML = head + body + "</tbody>";
   }
 
+  /* ---------------- warm vs cold: horizontal paired chart, log scale ---------------- */
+  function renderColdWarm() {
+    var mount = document.getElementById("chart-coldwarm");
+    var W = 760, rowH = 46, top = 10, left = 150, right = 90;
+    var H = top + PLATFORMS.length * rowH + 24;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": "Warm vs cold latency, aggregation query" });
+
+    var min = 0.3, max = 3000;
+    [1, 10, 100, 1000].forEach(function (tick) {
+      var x = logPos(tick, min, max, left, W - right);
+      svg.appendChild(el("line", { class: "grid-line", x1: x, x2: x, y1: top, y2: top + PLATFORMS.length * rowH }));
+      var t = el("text", { x: x, y: top + PLATFORMS.length * rowH + 18, "text-anchor": "middle", class: "cat-label" });
+      t.textContent = tick;
+      svg.appendChild(t);
+    });
+
+    PLATFORMS.forEach(function (p, i) {
+      var y = top + i * rowH;
+      var d = DATA.coldWarm[p.id].agg;
+      var warmX = logPos(d.warm50, min, max, left, W - right);
+      var coldX = logPos(d.cold, min, max, left, W - right);
+
+      var label = el("text", { x: left - 12, y: y + rowH / 2 + 4, "text-anchor": "end", class: "cat-label" });
+      label.textContent = p.name;
+      svg.appendChild(label);
+
+      var bar = el("rect", { class: "bar", x: left, y: y + 12, width: Math.max(warmX - left, 3), height: rowH - 28, rx: 4, fill: "var(" + p.var + ")" });
+      bar.addEventListener("mousemove", function (evt) {
+        showTip(evt, p.name + " &middot; aggregation<br>cold " + fmt(d.cold) + "ms &middot; warm p50 " + fmt(d.warm50) + "ms &middot; warm p95 " + fmt(d.warm95) + "ms");
+      });
+      bar.addEventListener("mouseleave", hideTip);
+      svg.appendChild(bar);
+
+      var cold = el("circle", { cx: coldX, cy: y + rowH / 2 - 2, r: 6, fill: "var(--surface)", stroke: "var(" + p.var + ")", "stroke-width": 2.5 });
+      cold.addEventListener("mousemove", function (evt) {
+        showTip(evt, p.name + " &middot; cold (1st call)<br>" + fmt(d.cold) + "ms");
+      });
+      cold.addEventListener("mouseleave", hideTip);
+      svg.appendChild(cold);
+
+      var val = el("text", { x: left + Math.max(warmX - left, coldX - left) + 12, y: y + rowH / 2 + 3, class: "val-tip" });
+      val.textContent = fmt(d.warm50, 1) + " / " + fmt(d.cold, 1);
+      svg.appendChild(val);
+    });
+
+    mount.appendChild(svg);
+
+    var tbl = document.getElementById("table-coldwarm");
+    var head = "<thead><tr><th>Platform</th><th>Workload</th><th>Cold (ms)</th><th>Warm p50 (ms)</th><th>Warm p95 (ms)</th></tr></thead><tbody>";
+    var body = "";
+    PLATFORMS.forEach(function (p) {
+      DATA.coldWarm[p.id].all.forEach(function (row) {
+        body += "<tr><td>" + p.name + "</td><td>" + row[0] + "</td><td class='tabular'>" + fmt(row[1]) + "</td><td class='tabular'>" + fmt(row[2]) + "</td><td class='tabular'>" + fmt(row[3]) + "</td></tr>";
+      });
+    });
+    tbl.innerHTML = head + body + "</tbody>";
+  }
+
+  /* ---------------- variance: horizontal CV% bar chart ---------------- */
+  function renderVariance() {
+    var mount = document.getElementById("chart-variance");
+    var W = 760, rowH = 44, top = 10, left = 150, right = 60;
+    var H = top + PLATFORMS.length * rowH + 24;
+    var svg = el("svg", { viewBox: "0 0 " + W + " " + H, width: "100%", height: H, role: "img", "aria-label": "Run-to-run variance, coefficient of variation" });
+
+    var maxCv = 15;
+    [0, 5, 10, 15].forEach(function (tick) {
+      var x = left + (tick / maxCv) * (W - right - left);
+      svg.appendChild(el("line", { class: "grid-line", x1: x, x2: x, y1: top, y2: top + PLATFORMS.length * rowH }));
+      var t = el("text", { x: x, y: top + PLATFORMS.length * rowH + 18, "text-anchor": "middle", class: "cat-label" });
+      t.textContent = tick + "%";
+      svg.appendChild(t);
+    });
+
+    PLATFORMS.forEach(function (p, i) {
+      var y = top + i * rowH;
+      var v = DATA.variance[p.id];
+      var barW = (v.cv / maxCv) * (W - right - left);
+
+      var label = el("text", { x: left - 12, y: y + rowH / 2 + 4, "text-anchor": "end", class: "cat-label" });
+      label.textContent = p.name;
+      svg.appendChild(label);
+
+      var bar = el("rect", { class: "bar", x: left, y: y + 8, width: Math.max(barW, 3), height: rowH - 20, rx: 5, fill: "var(" + p.var + ")" });
+      bar.addEventListener("mousemove", function (evt) {
+        showTip(evt, p.name + " &middot; CV " + fmt(v.cv, 1) + "%<br>runs: " + v.runs.map(function (r) { return fmt(r); }).join(", ") + " ms<br>mean " + fmt(v.mean) + "ms &middot; stdev " + fmt(v.stdev) + "ms");
+      });
+      bar.addEventListener("mouseleave", hideTip);
+      svg.appendChild(bar);
+
+      var val = el("text", { x: left + barW + 8, y: y + rowH / 2 + 4, class: "val-tip" });
+      val.textContent = fmt(v.cv, 1) + "%";
+      svg.appendChild(val);
+    });
+
+    mount.appendChild(svg);
+
+    var tbl = document.getElementById("table-variance");
+    var head = "<thead><tr><th>Platform</th><th>Per-run p50 (ms)</th><th>Mean (ms)</th><th>Stdev (ms)</th><th>CV (%)</th></tr></thead><tbody>";
+    var body = "";
+    PLATFORMS.forEach(function (p) {
+      var v = DATA.variance[p.id];
+      body += "<tr><td>" + p.name + "</td><td class='tabular'>" + v.runs.map(function (r) { return fmt(r); }).join(", ") + "</td><td class='tabular'>" + fmt(v.mean) + "</td><td class='tabular'>" + fmt(v.stdev) + "</td><td class='tabular'>" + fmt(v.cv, 1) + "</td></tr>";
+    });
+    tbl.innerHTML = head + body + "</tbody>";
+  }
+
   /* ---------------- mixed workload: log-log line chart ---------------- */
   function renderMixed() {
     var mount = document.getElementById("chart-mixed");
@@ -653,6 +821,7 @@
 
   legend(document.getElementById("legend-traversal"));
   legend(document.getElementById("legend-lookup"));
+  legend(document.getElementById("legend-coldwarm"));
   legend(document.getElementById("legend-mixed"));
 
   renderIngest();
@@ -662,6 +831,8 @@
   renderGrouped("chart-lookup", "table-lookup",
     [{ key: "point", label: "Point lookup" }, { key: "indexed", label: "Indexed lookup (age)" }],
     DATA.lookup, { min: 0.3, max: 3000, ticks: [0.5, 5, 50, 500] });
+  renderColdWarm();
+  renderVariance();
   renderMixed();
 })();
 </script>
